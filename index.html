@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="tr" data-concept="cigkofte">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFF4E8" />
+    <meta name="description" content="Konya Ereğli için hazırlanan çiğ köfte, dürüm ve kafe konseptlerinin etkileşimli web sitesi prototipi. Menüyü inceleyin, sepetinizi oluşturun, siparişinizi verin." />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:type" content="website" />
+    <title>Yoğrum Çiğ Köfte · Konya Ereğli</title>
+    <link rel="icon" id="favicon" href="data:," />
+    <script>
+      // Konsept rengini ilk boyamadan önce uygula (beyaz flaş olmasın)
+      (function () {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        var ids = { cigkofte: '#FFF4E8', durum: '#110E0C', kafe: '#F5EEE3', 'cigkofte-premium': '#F3EEE6', 'durum-premium': '#0F0E0D', 'kafe-premium': '#ECE8E1' };
+        var p = new URLSearchParams(location.search).get('konsept');
+        var id = ids[p] ? p : 'cigkofte';
+        document.documentElement.dataset.concept = id;
+        document.documentElement.dataset.tier = id.indexOf('-premium') > 0 ? 'premium' : 'casual';
+        document.documentElement.style.background = ids[id];
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', ids[id]);
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-uoe2a7sU.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BCu0EORl.css">
+  </head>
+  <body>
+    <div class="preloader" id="preloader" aria-hidden="true">
+      <div class="preloader__inner">
+        <div class="preloader__mark" id="preloader-mark"></div>
+        <div class="preloader__bar"><span id="preloader-bar"></span></div>
+        <div class="preloader__count" id="preloader-count">0</div>
+      </div>
+    </div>
+
+    <div class="stage-backdrop" id="stage-backdrop" aria-hidden="true"></div>
+    <div class="stage" id="stage" aria-hidden="true"></div>
+
+    <div id="app"></div>
+
+    <noscript>
+      <p style="padding:24px;font-family:system-ui">Bu siteyi görüntülemek için tarayıcınızda JavaScript'i etkinleştirin.</p>
+    </noscript>
+  </body>
+</html>
