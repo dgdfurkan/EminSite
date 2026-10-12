@@ -323,12 +323,15 @@ export default {
   },
   brand: { name: 'Zırh', full: 'Zırh Ocakbaşı', orderPrefix: 'ZRH' },
   stageOpts: {
+    background: '#0f0e0d',
+    env: { dark: true, warmth: 0.8 },
     shadows: true,
     lights: { key: '#ffe6cc', keyI: 2.3, rim: '#ffb38a', rimI: 1.4, fill: '#ff7a3a', fillI: 7 },
     envIntensity: 0.45,
     fov: 28,
   },
   thumbOpts: {
+    env: { dark: true, warmth: 0.8 },
     width: 640,
     height: 800,
     studio: { inner: '#2d2a27', outer: '#0e0d0c', shadow: 0.6, zoom: 1 },

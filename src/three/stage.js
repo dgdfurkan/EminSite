@@ -1,7 +1,11 @@
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { gsap } from 'gsap';
-import { fit, contactShadow, tickAll } from './kit.js';
+import { fit, contactShadow, tickAll, setGlassReal } from './kit.js';
+import { studioEnvironment } from './env.js';
 
 export function supportsWebGL() {
   try {
@@ -12,7 +16,7 @@ export function supportsWebGL() {
   }
 }
 
-function makeRenderer({ alpha = true, preserve = false } = {}) {
+function makeRenderer({ alpha = true, preserve = false, tone = 'neutral', exposure = 1 } = {}) {
   const r = new THREE.WebGLRenderer({
     antialias: true,
     alpha,
@@ -21,19 +25,15 @@ function makeRenderer({ alpha = true, preserve = false } = {}) {
   });
   r.setClearColor(0x000000, 0);
   r.outputColorSpace = THREE.SRGBColorSpace;
-  r.toneMapping = THREE.NeutralToneMapping;
-  r.toneMappingExposure = 1;
+  r.toneMapping = tone === 'agx' ? THREE.AgXToneMapping : THREE.NeutralToneMapping;
+  r.toneMappingExposure = exposure;
   r.domElement.addEventListener('webglcontextlost', (e) => e.preventDefault());
   return r;
 }
 
-function makeEnvironment(renderer, scene, intensity = 1) {
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const env = new RoomEnvironment();
-  scene.environment = pmrem.fromScene(env, 0.04).texture;
+function makeEnvironment(renderer, scene, intensity = 1, env = {}) {
+  scene.environment = studioEnvironment(renderer, env);
   scene.environmentIntensity = intensity;
-  env.dispose?.();
-  pmrem.dispose();
 }
 
 function addLights(scene, { key = '#fff1dc', keyI = 2.1, rim = '#ffffff', rimI = 1.1, fill = null, fillI = 0 } = {}) {
@@ -58,7 +58,7 @@ function enableShadows(renderer, light, size = 2048) {
   light.shadow.mapSize.set(size, size);
   light.shadow.bias = -0.0004;
   light.shadow.normalBias = 0.02;
-  light.shadow.radius = 6;
+  light.shadow.radius = 5;
 }
 
 // Stüdyo fonu: ortası açık, kenarları koyulaşan yumuşak degrade
@@ -102,10 +102,16 @@ export class Stage {
     this.container = container;
     this.opts = opts;
     this.isMobile = window.innerWidth < 768;
-    this.renderer = makeRenderer();
+    this.renderer = makeRenderer({ tone: opts.tone, exposure: opts.exposure });
     container.appendChild(this.renderer.domElement);
     this.scene = new THREE.Scene();
-    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.9);
+    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.9, opts.env);
+    // Opak fon (premium): gerçek kırılmalı cam yalnızca opak fonda doğru görünür
+    if (opts.background) {
+      this.scene.background = new THREE.Color(opts.background);
+      this.renderer.setClearColor(opts.background, 1);
+    }
+    setGlassReal(!!opts.background);
     this.lights = addLights(this.scene, opts.lights);
     if (opts.shadows) enableShadows(this.renderer, this.lights.key, this.isMobile ? 1024 : 2048);
     this.camera = new THREE.PerspectiveCamera(opts.fov ?? 30, 1, 0.1, 100);
@@ -228,11 +234,11 @@ export class ThumbRenderer {
     this.w = width;
     this.h = height;
     this.studio = opts.studio || null;
-    this.renderer = makeRenderer({ preserve: true, alpha: !this.studio });
+    this.renderer = makeRenderer({ preserve: true, alpha: !this.studio, tone: opts.tone, exposure: opts.exposure });
     this.renderer.setPixelRatio(1);
     this.renderer.setSize(width, height, false);
     this.scene = new THREE.Scene();
-    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.95);
+    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.95, opts.env);
     this.lights = addLights(this.scene, opts.lights);
     this.camera = new THREE.PerspectiveCamera(opts.fov ?? 26, width / height, 0.1, 100);
     this.shadowOpacity = opts.shadowOpacity ?? 0.34;
@@ -246,10 +252,24 @@ export class ThumbRenderer {
       this.floor.rotation.x = -Math.PI / 2;
       this.floor.receiveShadow = true;
       this.scene.add(this.floor);
+      // Ortam kapatması (temas noktalarında doğal karartma) ve çoklu örnekleme
+      const rt = new THREE.WebGLRenderTarget(width, height, { type: THREE.HalfFloatType, samples: 4 });
+      this.composer = new EffectComposer(this.renderer, rt);
+      this.composer.setPixelRatio(1);
+      this.composer.setSize(width, height);
+      this.composer.addPass(new RenderPass(this.scene, this.camera));
+      const ao = new GTAOPass(this.scene, this.camera, width, height);
+      ao.output = GTAOPass.OUTPUT.Default;
+      ao.blendIntensity = this.studio.ao ?? 0.85;
+      ao.updateGtaoMaterial({ radius: 0.22, distanceExponent: 1.4, thickness: 1, scale: 1, samples: 16, distanceFallOff: 1 });
+      ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 5, rings: 2, samples: 16 });
+      this.composer.addPass(ao);
+      this.composer.addPass(new OutputPass());
     }
   }
 
   async render(build, view = {}) {
+    setGlassReal(!!this.studio);
     const obj = build();
     const holder = fit(obj, 2);
     if (view.rot) holder.rotation.set(view.rot[0] || 0, view.rot[1] || 0, view.rot[2] || 0);
@@ -295,7 +315,8 @@ export class ThumbRenderer {
     this.camera.lookAt(center.x, center.y - (view.lookDown ?? 0), center.z);
 
     tickAll(holder, 1.2);
-    this.renderer.render(this.scene, this.camera);
+    if (this.composer) this.composer.render();
+    else this.renderer.render(this.scene, this.camera);
     const type = this.studio ? 'image/jpeg' : 'image/webp';
     const blob = await new Promise((res) => this.renderer.domElement.toBlob(res, type, 0.9));
 
@@ -320,10 +341,10 @@ export class ThumbRenderer {
 export class Viewer {
   constructor(opts = {}) {
     this.studio = opts.studio || null;
-    this.renderer = makeRenderer({ alpha: !this.studio });
+    this.renderer = makeRenderer({ alpha: !this.studio, tone: opts.tone, exposure: opts.exposure });
     this.renderer.domElement.setAttribute('aria-hidden', 'true');
     this.scene = new THREE.Scene();
-    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.95);
+    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.95, opts.env);
     this.lights = addLights(this.scene, opts.lights);
     if (this.studio) {
       this.scene.background = studioBackground(this.studio.inner, this.studio.outer);
@@ -419,6 +440,7 @@ export class Viewer {
   show(build, view = {}) {
     this.clear();
     this.view = view;
+    setGlassReal(!!this.studio);
     const holder = fit(build(), 2);
     if (view.rot) holder.rotation.set(view.rot[0] || 0, view.rot[1] || 0, view.rot[2] || 0);
     holder.updateMatrixWorld(true);

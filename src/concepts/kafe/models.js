@@ -141,7 +141,7 @@ export function fincan({ pattern = 'telve', foam = true, scale = 1, handleColor 
   h.position.set(0.27, 0.3, 0);
   g.add(h);
   if (foam) {
-    const f = new THREE.Mesh(new THREE.CircleGeometry(0.245, 48), K.std({ map: T.turkishFoamTexture(), roughness: 0.75 }));
+    const f = new THREE.Mesh(new THREE.CircleGeometry(0.245, 48), K.phys({ map: T.turkishFoamTexture(), bumpMap: T.turkishFoamTexture(), bumpScale: 1.2, roughness: 0.6, clearcoat: 0.35, clearcoatRoughness: 0.35 }));
     f.rotation.x = -Math.PI / 2;
     f.position.y = 0.455;
     g.add(f);
@@ -169,6 +169,7 @@ export function waterGlass() {
     [0.145, 0.05],
     [0, 0.05],
   ];
+  const real = K.isGlassReal();
   const water = new THREE.Mesh(
     K.lathe([
       [0, 0.052],
@@ -176,10 +177,21 @@ export function waterGlass() {
       [0.158, 0.48],
       [0, 0.48],
     ]),
-    K.phys({ color: '#dceef4', roughness: 0.02, transparent: true, opacity: 0.35, clearcoat: 1, depthWrite: false })
+    K.phys({ color: '#dceef4', roughness: 0.02, transparent: true, opacity: real ? 0.08 : 0.35, clearcoat: 1, depthWrite: false })
   );
   water.renderOrder = 1;
   g.add(water, K.glassMesh(K.lathe(prof), { opacity: 0.1, rim: 0.65 }));
+  if (real) {
+    // su yüzeyi: ışığı yansıtan ince bir tabaka
+    const surf = new THREE.Mesh(
+      new THREE.CircleGeometry(0.156, 40),
+      K.phys({ color: '#ffffff', roughness: 0, metalness: 0, transparent: true, opacity: 0.35, clearcoat: 1, envMapIntensity: 2, depthWrite: false })
+    );
+    surf.rotation.x = -Math.PI / 2;
+    surf.position.y = 0.48;
+    surf.renderOrder = 5;
+    g.add(surf);
+  }
   return g;
 }
 
@@ -231,12 +243,12 @@ export function latteCup({ top = 'heart', glaze = '#efe6d8', inner = '#f8f2e8', 
   const h = handle({ r: 0.1, tube: 0.026, mat: K.ceramic(glaze) });
   h.position.set(0.355, 0.3, 0);
   cup.add(h);
-  const surf = new THREE.Mesh(new THREE.CircleGeometry(0.33, 48), K.std({ map: T.latteTexture(top), roughness: 0.6 }));
+  const surf = new THREE.Mesh(new THREE.CircleGeometry(0.33, 48), K.phys({ map: T.latteTexture(top), bumpMap: T.latteTexture(top), bumpScale: 0.9, roughness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.4 }));
   surf.rotation.x = -Math.PI / 2;
   surf.position.y = 0.455;
   cup.add(surf);
   if (top === 'foam' || top === 'cinnamon') {
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.33, 40, 10, 0, Math.PI * 2, 0, 0.5), K.std({ map: T.latteTexture(top), roughness: 0.75 }));
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.33, 40, 10, 0, Math.PI * 2, 0, 0.5), K.phys({ map: T.latteTexture(top), bumpMap: T.latteTexture(top), bumpScale: 0.9, roughness: 0.75, clearcoat: 0.3, clearcoatRoughness: 0.4 }));
     dome.scale.y = 0.35;
     dome.position.y = 0.42;
     cup.add(dome);
@@ -269,7 +281,7 @@ export function mug({ top = 'dark', color = '#7d8c66' } = {}) {
   const h = handle({ r: 0.13, tube: 0.035, arc: Math.PI * 1.3, mat: K.ceramic(color) });
   h.position.set(0.26, 0.33, 0);
   g.add(h);
-  const surf = new THREE.Mesh(new THREE.CircleGeometry(0.235, 48), K.std({ map: T.latteTexture(top), roughness: 0.55 }));
+  const surf = new THREE.Mesh(new THREE.CircleGeometry(0.235, 48), K.phys({ map: T.latteTexture(top), bumpMap: T.latteTexture(top), bumpScale: 0.9, roughness: 0.55, clearcoat: 0.3, clearcoatRoughness: 0.4 }));
   surf.rotation.x = -Math.PI / 2;
   surf.position.y = 0.58;
   g.add(surf);
@@ -383,14 +395,14 @@ export function cezve() {
     [0, 0.05],
   ];
   g.add(vessel(outer, inner, mat, K.std({ color: '#d7a36e', metalness: 1, roughness: 0.3 })));
-  const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.205, 40), K.std({ map: T.turkishFoamTexture(), roughness: 0.7 }));
+  const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.205, 40), K.phys({ map: T.turkishFoamTexture(), bumpMap: T.turkishFoamTexture(), bumpScale: 1.2, roughness: 0.6, clearcoat: 0.35, clearcoatRoughness: 0.35 }));
   coffee.rotation.x = -Math.PI / 2;
   coffee.position.y = 0.47;
   g.add(coffee);
   const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.9, 12), K.metal('#c9a35a', 0.25));
   arm.rotation.z = Math.PI / 2 - 0.25;
   arm.position.set(-0.68, 0.62, 0);
-  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.4, 16), K.std({ map: T.bakedTexture('wood'), roughness: 0.6 }));
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.4, 16), K.std({ map: T.bakedTexture('wood'), bumpMap: T.bakedTexture('wood'), bumpScale: 0.8, roughness: 0.6 }));
   grip.rotation.z = Math.PI / 2 - 0.25;
   grip.position.set(-1.05, 0.72, 0);
   g.add(arm, grip);
@@ -412,7 +424,7 @@ export function cheesecake() {
   geo.rotateX(-Math.PI / 2);
   const sideTex = T.bakedTexture('cheeseSide');
   sideTex.repeat.set(1, 1.8);
-  const top = K.std({ map: T.bakedTexture('burnt'), roughness: 0.6 });
+  const top = K.std({ map: T.bakedTexture('burnt'), bumpMap: T.bakedTexture('burnt'), bumpScale: 1.5, roughness: 0.6 });
   const side = K.std({ map: sideTex, roughness: 0.55 });
   const m = new THREE.Mesh(geo, [top, side]);
   m.position.set(-0.4, 0.08, 0);
@@ -423,7 +435,7 @@ export function cheesecake() {
 export function brownie({ iceCream = true } = {}) {
   const g = new THREE.Group();
   g.add(K.plate({ r: 0.75, color: '#f8f1e6', rimColor: '#7d8c66' }));
-  const top = K.std({ map: T.bakedTexture('brownie'), roughness: 0.55 });
+  const top = K.std({ map: T.bakedTexture('brownie'), bumpMap: T.bakedTexture('brownie'), bumpScale: 1.5, roughness: 0.55 });
   const side = K.std({ color: '#2e170c', roughness: 0.7 });
   const b = new THREE.Mesh(K.roundedBox(0.75, 0.3, 0.6, 0.04, 3), [side, side, top, side, side, side]);
   b.position.set(-0.08, 0.2, 0);
@@ -443,7 +455,7 @@ export function brownie({ iceCream = true } = {}) {
 
 export function croissant() {
   const g = new THREE.Group();
-  const mat = K.phys({ map: T.bakedTexture('croissant'), roughness: 0.45, clearcoat: 0.35 });
+  const mat = K.phys({ map: T.bakedTexture('croissant'), bumpMap: T.bakedTexture('croissant'), bumpScale: 1.5, roughness: 0.45, clearcoat: 0.35 });
   const n = 7;
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1);
@@ -470,7 +482,7 @@ export function toast({ mixed = false } = {}) {
   const ext = { depth: 0.09, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 3 };
   const bread = new THREE.ExtrudeGeometry(tri, ext);
   bread.rotateX(-Math.PI / 2);
-  const topM = K.std({ map: T.bakedTexture('toast'), roughness: 0.65 });
+  const topM = K.std({ map: T.bakedTexture('toast'), bumpMap: T.bakedTexture('toast'), bumpScale: 1.5, roughness: 0.65 });
   const sideM = K.std({ color: '#b97a36', roughness: 0.7 });
   const cheeseM = K.phys({ color: '#f2c84b', roughness: 0.3, clearcoat: 0.4 });
   const make = (x, z, ry) => {

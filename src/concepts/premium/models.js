@@ -12,7 +12,7 @@ export function slatePlate({ r = 1.4 } = {}) {
   const g = new THREE.Group();
   const m = new THREE.Mesh(
     new THREE.CylinderGeometry(r, r * 1.015, 0.07, 80),
-    K.std({ map: T.bakedTexture('slate'), roughness: 0.82, metalness: 0.05 })
+    K.std({ map: T.bakedTexture('slate'), bumpMap: T.bakedTexture('slate'), bumpScale: 0.8, roughness: 0.82, metalness: 0.05 })
   );
   m.position.y = 0.035;
   m.receiveShadow = true;
@@ -22,7 +22,7 @@ export function slatePlate({ r = 1.4 } = {}) {
 }
 
 export function slateBoard({ w = 3, d = 1.5 } = {}) {
-  const m = new THREE.Mesh(K.roundedBox(w, 0.08, d, 0.03, 3), K.std({ map: T.bakedTexture('slate'), roughness: 0.82 }));
+  const m = new THREE.Mesh(K.roundedBox(w, 0.08, d, 0.03, 3), K.std({ map: T.bakedTexture('slate'), bumpMap: T.bakedTexture('slate'), bumpScale: 0.8, roughness: 0.82 }));
   m.position.y = 0.04;
   m.receiveShadow = true;
   const g = new THREE.Group();
@@ -34,7 +34,7 @@ export function slateBoard({ w = 3, d = 1.5 } = {}) {
 export function stoneBowl({ r = 0.55, h = 0.3, dark = false } = {}) {
   const mat = dark
     ? K.std({ color: '#2b2726', roughness: 0.7 })
-    : K.std({ map: T.bakedTexture('stone'), roughness: 0.85 });
+    : K.std({ map: T.bakedTexture('stone'), bumpMap: T.bakedTexture('stone'), bumpScale: 0.8, roughness: 0.85 });
   return K.bowl({ r, h, material: mat });
 }
 
@@ -218,29 +218,31 @@ export function zirhWrap(opts = {}) {
 
 export function zirhBoard() {
   const g = new THREE.Group();
-  const b = slateBoard({ w: 3.1, d: 1.55 });
+  const b = slateBoard({ w: 3.2, d: 1.7 });
   g.add(b);
   const y = b.userData.top;
+  // dürüm arkada, çapraz
   const w = zirhWrap({ seed: 1, radius: 0.4 });
   w.rotation.order = 'YXZ';
-  w.rotation.set(0, 0.45, Math.PI / 2);
-  w.position.set(-0.35, y + 0.42, 0.1);
+  w.rotation.set(0, 0.28, Math.PI / 2);
+  w.position.set(-0.25, y + 0.42, -0.32);
   g.add(w);
+  // Adana şişi önde: kebap açıkça görünsün
   const sk = DM.skewer({ len: 1.9, seed: 3 });
-  sk.position.set(0.25, y + 0.13, -0.5);
-  sk.rotation.y = 0.12;
+  sk.position.set(-0.05, y + 0.12, 0.48);
+  sk.rotation.y = -0.06;
   g.add(sk);
   [
-    [0.85, 0.42, -0.3],
-    [1.05, 0.25, 0.1],
+    [1.05, -0.05, 0.25],
+    [1.2, 0.18, -0.15],
   ].forEach(([x, z, ry], i) => {
-    const p = K.pepper({ len: 0.95, r: 0.065, charred: true, curve: 0.2 });
-    p.rotation.set(0, ry, -Math.PI / 2);
-    p.position.set(x, y + 0.07 + i * 0.03, z);
+    const p = K.pepper({ len: 0.85, r: 0.06, charred: true, curve: 0.2 });
+    p.rotation.set(0, ry + Math.PI / 2, -Math.PI / 2);
+    p.position.set(x, y + 0.06 + i * 0.03, z);
     g.add(p);
   });
   const t = K.tomato({ r: 0.2, charred: true });
-  t.position.set(1.15, y + 0.17, -0.35);
+  t.position.set(1.0, y + 0.17, -0.5);
   g.add(t);
   return g;
 }
@@ -277,7 +279,7 @@ export function grillScene() {
 export function katmer() {
   const g = new THREE.Group();
   g.add(K.plate({ r: 0.85, color: '#f1ece4' }));
-  const top = K.std({ map: T.bakedTexture('katmer'), roughness: 0.55 });
+  const top = K.std({ map: T.bakedTexture('katmer'), bumpMap: T.bakedTexture('katmer'), bumpScale: 1.5, roughness: 0.55 });
   const side = K.std({ color: '#d7ac63', roughness: 0.6 });
   const m = new THREE.Mesh(K.roundedBox(0.95, 0.08, 0.95, 0.03, 3), [side, side, top, side, side, side]);
   m.position.y = 0.09;
@@ -301,7 +303,7 @@ export function baklava() {
   s.closePath();
   const geo = new THREE.ExtrudeGeometry(s, { depth: 0.16, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.015, bevelSegments: 2 });
   geo.rotateX(-Math.PI / 2);
-  const top = K.phys({ map: T.bakedTexture('baklava'), roughness: 0.35, clearcoat: 0.8 });
+  const top = K.phys({ map: T.bakedTexture('baklava'), bumpMap: T.bakedTexture('baklava'), bumpScale: 1.5, roughness: 0.35, clearcoat: 0.8 });
   const side = K.std({ color: '#e2b665', roughness: 0.5 });
   const pist = K.std({ color: '#7fa13a', roughness: 0.6 });
   [
@@ -323,19 +325,22 @@ export function baklava() {
 
 // --- Sükûn -----------------------------------------------------------------------
 export function brassTray({ r = 1.25 } = {}) {
-  const geo = K.lathe(
-    [
-      [0, 0],
-      [r * 0.96, 0],
-      [r, 0.04],
-      [r * 1.02, 0.11],
-      [r * 0.995, 0.12],
-      [r * 0.965, 0.045],
-      [0, 0.04],
-    ],
-    96
+  // Profil: alt yüz (2 nokta), kenar (3 nokta), üst yüz (11 nokta) -> desen üst yüze geniş yer kaplar
+  const pts = [
+    [0, 0],
+    [r * 0.96, 0],
+    [r, 0.04],
+    [r * 1.02, 0.11],
+    [r * 0.995, 0.12],
+  ];
+  for (let i = 0; i <= 10; i++) pts.push([r * 0.965 * (1 - i / 10), 0.045 - 0.005 * (i / 10)]);
+  const topStart = 4 / (pts.length - 1);
+  const geo = K.lathe(pts, 128);
+  const engr = T.engravedTrayTexture(topStart);
+  const m = new THREE.Mesh(
+    geo,
+    K.std({ color: '#cba660', metalness: 1, roughness: 0.27, map: engr, bumpMap: engr, bumpScale: 2.2 })
   );
-  const m = new THREE.Mesh(geo, K.std({ color: '#c6a15e', metalness: 1, roughness: 0.32 }));
   m.receiveShadow = true;
   const g = new THREE.Group();
   g.add(m);

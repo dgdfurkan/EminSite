@@ -283,8 +283,9 @@ export default {
     description: 'Bakır cezvede Türk kahvesi, el demlemeleri, demli çay ve günlük tatlılar. Ereğli’de sakin bir kahve evi; online sipariş ve gel-al.',
   },
   brand: { name: 'Sükûn', full: 'Sükûn Kahve Evi', orderPrefix: 'SKN' },
-  stageOpts: { shadows: true, lights: { key: '#fff4e6', keyI: 2.4, rim: '#ffffff', rimI: 0.8 }, envIntensity: 0.85, fov: 28 },
+  stageOpts: { background: '#ece8e1', env: { warmth: 0.45 }, shadows: true, lights: { key: '#fff4e6', keyI: 2.4, rim: '#ffffff', rimI: 0.8 }, envIntensity: 0.85, fov: 28 },
   thumbOpts: {
+    env: { warmth: 0.45 },
     width: 640,
     height: 800,
     studio: { inner: '#eeeae3', outer: '#d1c9bd', shadow: 0.28, zoom: 1 },

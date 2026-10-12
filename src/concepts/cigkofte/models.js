@@ -11,56 +11,71 @@ export function kofte({ len = 1.0, rad = 0.26, seed = 1, fingers = 4 } = {}) {
   const NP = 72;
   const r = T.rng(seed * 13 + 7);
   const half = len / 2;
-  const span = 0.66; // oyukların dağıldığı t aralığı
+  const span = 0.62; // oyukların dağıldığı t aralığı
   const centers = Array.from({ length: fingers }, (_, i) => -span + (i * 2 * span) / (fingers - 1));
-  const gw = (span / (fingers - 1)) * 1.04; // oyuk yarı genişliği (t biriminde)
-  const jitter = centers.map(() => (r() - 0.5) * 0.05);
-  const depthJ = centers.map(() => 0.9 + r() * 0.2);
-  const phi0 = 0.95; // parmakların bastığı yön (üst-ön)
+  const base = (span / (fingers - 1)) * 0.98;
+  const widths = centers.map(() => base * (0.88 + r() * 0.24));
+  const jitter = centers.map(() => (r() - 0.5) * 0.06);
+  const slant = centers.map(() => 0.05 + r() * 0.06);
+  const depthJ = centers.map(() => 0.85 + r() * 0.3);
+  const phi0 = 1.05; // parmakların bastığı yön (üst-ön)
+  const tri = 0.6 + r() * 0.5; // kesitin üçgenimsi yönü
   const bendAmt = 0.1 + r() * 0.06;
   const pos = [];
   const uv = [];
+  const col = [];
   for (let i = 0; i <= NT; i++) {
     const t = -1 + (2 * i) / NT;
-    // uç profili: serçe parmak ucu (t<0) daha ince ve sivri
-    const tip = t < 0 ? 0.5 : 0.4;
-    const asym = t < 0 ? 0.9 : 1.0;
-    const prof = Math.pow(Math.max(0, 1 - Math.abs(t) ** 2.2), tip) * asym;
+    // uç profili: serçe parmak ucu (t<0) incelir; başparmak ucu (t>0) kütleşir
+    const tip = t < 0 ? 0.62 : 0.28;
+    const asym = t < 0 ? 0.86 : 1.0;
+    const prof = Math.pow(Math.max(0, 1 - Math.abs(t) ** 2.4), tip) * asym;
     for (let j = 0; j <= NP; j++) {
       const phi = (j / NP) * Math.PI * 2;
-      let cy = Math.sin(phi) * 0.86;
-      let cz = Math.cos(phi);
-      // avuç tarafı (alt-arka) yassı
+      // yumruk içinde sıkılmış kesit: üçgenimsi, avuç tarafı geniş ve yassı
+      const triK = 1 + 0.1 * Math.cos(3 * (phi - tri));
+      let cy = Math.sin(phi) * 0.84 * triK;
+      let cz = Math.cos(phi) * triK;
       const palm = K.smooth(-0.2, 0.9, -Math.sin(phi - 0.35));
-      cy *= 1 - 0.3 * palm * (cy < 0 ? 1 : 0.4);
-      // parmak oyukları: dairesel kesit, aralarında keskin boğum
+      cy *= 1 - 0.32 * palm * (cy < 0 ? 1 : 0.4);
+      // parmak oyukları üst-ön yüzde; aralarında belirgin boğumlar
       const facing = Math.cos(phi - phi0);
-      const wgt = K.smooth(-0.45, 0.5, facing);
+      const wgt = K.smooth(-0.25, 0.55, facing);
       let g = 0;
       let gi = 0;
-      // parmaklar köfteyi hafif çapraz kavrar
-      const skew = 0.07 * Math.cos(phi - phi0 - 0.6);
       for (let k = 0; k < centers.length; k++) {
-        const u = (t - centers[k] - jitter[k] - skew) / gw;
+        const skew = slant[k] * Math.cos(phi - phi0 - 0.6);
+        const u = (t - centers[k] - jitter[k] - skew) / widths[k];
         if (Math.abs(u) < 1) {
-          const v = Math.sqrt(1 - u * u);
+          // yumuşak kenarlı oyuk: parmak etinin bıraktığı yuvarlak iz
+          const v = Math.pow(1 - u * u, 0.8);
           if (v > g) {
             g = v;
             gi = k;
           }
         }
       }
-      // işaret parmağı oyuğu en derin, serçe en sığ
-      const fingerDepth = (0.78 + 0.22 * (gi / Math.max(1, centers.length - 1))) * depthJ[gi];
-      let k = 1 - 0.3 * Math.pow(g, 1.35) * wgt * fingerDepth;
-      // boğumların sırtında hafif kabarma
-      k += 0.035 * (1 - g) * wgt * (Math.abs(t) < span + gw ? 1 : 0);
-      const n = 1 + (K.fbm(t * 2.6 + seed, cy * 2.2, cz * 2.2) - 0.5) * 0.14;
+      const fingerDepth = (0.8 + 0.2 * (gi / Math.max(1, centers.length - 1))) * depthJ[gi];
+      let k = 1 - 0.3 * Math.pow(g, 1.3) * wgt * fingerDepth;
+      k += 0.04 * (1 - g) * wgt * (Math.abs(t) < span + base ? 1 : 0);
+      // başparmak ucunda hafif çukur
+      const thumb = K.smooth(0.72, 0.98, t) * K.smooth(-0.2, 0.8, facing);
+      k -= 0.12 * thumb;
+      // elle yoğrulmuş düzensizlik: büyük ve orta ölçekli pürüz
+      const n =
+        1 +
+        (K.fbm(t * 1.6 + seed, cy * 1.4, cz * 1.4) - 0.5) * 0.2 +
+        (K.vnoise(t * 7 + seed, cy * 6, cz * 6) - 0.5) * 0.05;
       const R = rad * prof * k * n;
-      const x = t * half;
+      const x = t * half * (1 - 0.05 * K.smooth(0.75, 1, t));
       const bend = bendAmt * rad * (t * t - 0.35);
       pos.push(x, cy * R + bend, cz * R);
       uv.push(i / NT, j / NP);
+      // oyukların dibi ve avuç tarafı daha koyu (ortam gölgesi), boğum sırtları hafif açık
+      const cavity = Math.pow(g, 1.5) * wgt * fingerDepth;
+      const shade = Math.min(1.1, 1 - 0.42 * cavity + 0.1 * (1 - g) * wgt - 0.12 * palm * (cy < 0 ? 1 : 0) - 0.18 * thumb);
+      const tint = 0.95 + r() * 0.07;
+      col.push(shade * tint, shade * tint * 0.97, shade * tint * 0.95);
     }
   }
   const idx = [];
@@ -75,6 +90,7 @@ export function kofte({ len = 1.0, rad = 0.26, seed = 1, fingers = 4 } = {}) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   geo.setIndex(idx);
   geo.computeVertexNormals();
   // dikiş ve uç noktalarında normalleri birleştir (çizgi görünmesin)
@@ -92,7 +108,19 @@ export function kofte({ len = 1.0, rad = 0.26, seed = 1, fingers = 4 } = {}) {
   }
   nor.needsUpdate = true;
   const tex = T.kofteTexture();
-  const mat = K.std({ map: tex.map, bumpMap: tex.bump, bumpScale: 3, roughness: 0.8, metalness: 0 });
+  const mat = K.phys({
+    map: tex.map,
+    bumpMap: tex.bump,
+    bumpScale: 3,
+    roughness: 0.72,
+    metalness: 0,
+    vertexColors: true,
+    sheen: 0.45,
+    sheenRoughness: 0.55,
+    sheenColor: '#b8442c',
+    clearcoat: 0.1,
+    clearcoatRoughness: 0.55,
+  });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.castShadow = true;
   return mesh;
@@ -263,26 +291,40 @@ export function tub({ scale = 1 } = {}) {
   return g;
 }
 
+// Ev turşusu: kornişon, turşu biberi, havuç ve salamura
 export function pickleBowl() {
   const g = new THREE.Group();
   const b = K.bowl({ r: 0.55, h: 0.36, material: K.ceramic('#fffaf2'), inner: K.ceramic('#f6efe4') });
   g.add(b);
+  const brine = new THREE.Mesh(
+    new THREE.CircleGeometry(0.47, 40),
+    K.phys({ color: '#b39a4e', roughness: 0.02, clearcoat: 1, transparent: true, opacity: 0.32, depthWrite: false, envMapIntensity: 1.6 })
+  );
+  brine.rotation.x = -Math.PI / 2;
+  brine.position.y = 0.24;
+  g.add(brine);
   const r = T.rng(8);
-  const greenMat = K.phys({ color: '#7f9a2c', roughness: 0.3, clearcoat: 0.8 });
-  const redMat = K.phys({ color: '#c0281c', roughness: 0.3, clearcoat: 0.8 });
-  for (let i = 0; i < 9; i++) {
-    const isRed = i % 3 === 0;
-    const m = new THREE.Mesh(new THREE.CapsuleGeometry(isRed ? 0.06 : 0.075, isRed ? 0.34 : 0.26, 6, 12), isRed ? redMat : greenMat);
+  const gherkinMat = K.phys({ color: '#5a6a22', roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.25 });
+  for (let i = 0; i < 6; i++) {
+    const geo = K.displace(new THREE.CapsuleGeometry(0.06 + r() * 0.015, 0.22 + r() * 0.08, 10, 18), 0.012, 18, i + 2);
+    const m = new THREE.Mesh(geo, gherkinMat);
     const a = r() * Math.PI * 2;
-    const dd = Math.sqrt(r()) * 0.28;
-    m.position.set(Math.cos(a) * dd, 0.34 + r() * 0.1, Math.sin(a) * dd);
-    m.rotation.set(r() * 3, r() * 3, Math.PI / 2 + (r() - 0.5));
+    const d = Math.sqrt(r()) * 0.28;
+    m.position.set(Math.cos(a) * d, 0.3 + r() * 0.08, Math.sin(a) * d);
+    m.rotation.set(Math.PI / 2 + (r() - 0.5) * 0.6, r() * 3, (r() - 0.5) * 0.5);
     g.add(m);
   }
-  for (let i = 0; i < 3; i++) {
-    const c = K.citrusSlice({ r: 0.1, t: 0.035, kind: 'cucumber' });
-    c.position.set((r() - 0.5) * 0.4, 0.44, (r() - 0.5) * 0.4);
-    c.rotation.set(r() * 2, 0, r() * 2);
+  for (let i = 0; i < 2; i++) {
+    const p = K.pepper({ len: 0.55, r: 0.05, color: '#9ea43c', curve: 0.25 });
+    p.rotation.set(0, i * 2.2 + 0.4, -Math.PI / 2 + 0.25);
+    p.position.set(-0.15 + i * 0.25, 0.35, (i - 0.5) * 0.25);
+    g.add(p);
+  }
+  const carrot = K.phys({ color: '#e07b28', roughness: 0.35, clearcoat: 0.6 });
+  for (let i = 0; i < 5; i++) {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.025, 20), carrot);
+    c.position.set((r() - 0.5) * 0.45, 0.36 + r() * 0.06, (r() - 0.5) * 0.45);
+    c.rotation.set(r() * 1.5, r() * 3, r() * 1.5);
     g.add(c);
   }
   return g;

@@ -107,8 +107,35 @@ const glassFrag = /* glsl */ `
   }
 `;
 
+// Gerçek cam modu: opak fonlu sahnelerde (premium, stüdyo görselleri) kırılmalı fiziksel cam.
+// Şeffaf tuvalde (standart seri) kırılma örneklenemediği için yansımalı sahte cam kullanılır.
+let glassReal = false;
+export const setGlassReal = (v) => (glassReal = !!v);
+export const isGlassReal = () => glassReal;
+
 // Cam: arka yüz + ön yüz (yansıma) + fresnel kenar parlaması
 export function glassMesh(geo, { tint = '#ffffff', opacity = 0.14, rim = 0.85, rimColor = '#ffffff', env = 2.4 } = {}) {
+  if (glassReal) {
+    const m = new THREE.Mesh(
+      geo,
+      phys({
+        color: tint,
+        metalness: 0,
+        roughness: 0.015,
+        transmission: 1,
+        thickness: 0.08,
+        ior: 1.5,
+        specularIntensity: 1,
+        clearcoat: 1,
+        clearcoatRoughness: 0.02,
+        envMapIntensity: 1.6,
+        attenuationColor: new THREE.Color(tint).lerp(new THREE.Color('#e6f2ee'), 0.5),
+        attenuationDistance: 1.5,
+      })
+    );
+    m.renderOrder = 3;
+    return group(m);
+  }
   const front = phys({
     color: tint,
     roughness: 0.03,
@@ -146,11 +173,23 @@ export function glassMesh(geo, { tint = '#ffffff', opacity = 0.14, rim = 0.85, r
 }
 
 export const ceramic = (color = '#fbf8f2', o = {}) =>
-  phys({ color, roughness: 0.18, metalness: 0, clearcoat: 0.8, clearcoatRoughness: 0.12, ...o });
+  phys({ color, roughness: 0.16, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, specularIntensity: 0.8, ...o });
 
 export const metal = (color = '#c9ccd1', roughness = 0.28) => std({ color, metalness: 1, roughness });
 
-export const copper = () => std({ color: '#c8713e', metalness: 1, roughness: 0.3 });
+// Dövme bakır: çekiç izleri yüzeyde ışığı kırar
+export const copper = () =>
+  std({
+    color: '#dc8558',
+    metalness: 1,
+    roughness: 0.24,
+    bumpMap: T.bakedTexture('hammered'),
+    bumpScale: 1.6,
+    roughnessMap: T.bakedTexture('hammered'),
+  });
+
+export const brass = (o = {}) =>
+  std({ color: '#c6a15e', metalness: 1, roughness: 0.3, bumpMap: T.bakedTexture('hammered'), bumpScale: 0.6, ...o });
 
 // ============================================================================
 // Ortak modeller
@@ -247,12 +286,20 @@ export function leaf({ w = 1, h = 1.5, tone = 'lettuce', cup = 0.28, ruffle = 0.
     pos.setZ(i, z);
   }
   g.computeVertexNormals();
-  const mat = std({
-    map: T.leafTexture(tone),
+  const tex = T.leafTexture(tone);
+  const mat = phys({
+    map: tex,
+    bumpMap: tex,
+    bumpScale: 2.2,
     alphaTest: 0.5,
     side: THREE.DoubleSide,
-    roughness: 0.5,
+    roughness: 0.42,
     metalness: 0,
+    sheen: 0.5,
+    sheenRoughness: 0.5,
+    sheenColor: '#e6f7b0',
+    clearcoat: 0.25,
+    clearcoatRoughness: 0.3,
   });
   return new THREE.Mesh(g, mat);
 }
@@ -267,16 +314,30 @@ export function citrusSlice({ r = 0.34, t = 0.07, kind = 'lemon' } = {}) {
 
 export function seeds({ count = 18, radius = 0.4, size = 0.055, color = '#b4122a', seed = 1, flat = false } = {}) {
   const geo = new THREE.IcosahedronGeometry(1, 2);
-  const mat = phys({
-    color,
-    roughness: 0.12,
-    clearcoat: 1,
-    clearcoatRoughness: 0.05,
-    emissive: '#3a0008',
-    emissiveIntensity: 0.6,
-    sheen: 0.4,
-    sheenColor: '#ff6070',
-  });
+  const mat = glassReal
+    ? phys({
+        color,
+        roughness: 0.06,
+        transmission: 0.55,
+        thickness: 0.4,
+        ior: 1.36,
+        attenuationColor: '#7a0010',
+        attenuationDistance: 0.25,
+        clearcoat: 1,
+        clearcoatRoughness: 0.03,
+        emissive: '#3a0008',
+        emissiveIntensity: 0.25,
+      })
+    : phys({
+        color,
+        roughness: 0.12,
+        clearcoat: 1,
+        clearcoatRoughness: 0.05,
+        emissive: '#3a0008',
+        emissiveIntensity: 0.6,
+        sheen: 0.4,
+        sheenColor: '#ff6070',
+      });
   const im = new THREE.InstancedMesh(geo, mat, count);
   const r = T.rng(seed);
   const m = new THREE.Matrix4();
@@ -427,7 +488,8 @@ export function wrap({
   const g = new THREE.Group();
   const r = T.rng(seed);
   const half = length / 2;
-  const lavMat = std({ map: T.lavasTexture(seed % 3, 1.5), roughness: 0.78, side: THREE.DoubleSide });
+  const lavTex = T.lavasTexture(seed % 3, 1.5);
+  const lavMat = phys({ map: lavTex, bumpMap: lavTex, bumpScale: 1.4, roughness: 0.82, sheen: 0.4, sheenRoughness: 0.7, sheenColor: '#fff2d6', side: THREE.DoubleSide });
 
   const lavGeo = new THREE.CylinderGeometry(radius, radius * 0.97, length, 64, 30, true);
   const pos = lavGeo.attributes.position;
@@ -537,7 +599,8 @@ export function wrap({
       for (let j = 0; j <= rows; j++) {
         const t = j / rows;
         const y = y0 + (topY - y0) * t;
-        const crinkle = 1 + (vnoise(u * 18, y * 6, seed) - 0.5) * 0.035;
+        // kâğıt kırışıklığı: ince dalga + rastgele katlanma izleri
+        const crinkle = 1 + (vnoise(u * 20, y * 6, seed) - 0.5) * 0.03 + Math.sin(u * 120 + y * 8) * 0.0025;
         positions.push(Math.sin(a) * pr * crinkle, y, Math.cos(a) * pr * crinkle * 0.92);
         uvs.push(u, (y - y0) / (Math.PI * pr));
       }
@@ -554,7 +617,7 @@ export function wrap({
     pg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     pg.setIndex(idx);
     pg.computeVertexNormals();
-    const pmat = std({ map: T.paperTexture(paper), roughness: 0.82, side: THREE.DoubleSide });
+    const pmat = phys({ map: T.paperTexture(paper), roughness: 0.85, side: THREE.DoubleSide });
     g.add(new THREE.Mesh(pg, pmat));
     const bottom = new THREE.Mesh(new THREE.CircleGeometry(pr, 48), pmat);
     bottom.rotation.x = Math.PI / 2;
@@ -600,23 +663,27 @@ export function ayranCup({ bg = '#ffffff', ink = '#d7262f', title = 'AYRAN', sub
   return group(body, band, lid);
 }
 
-// Bakır tasta köpüklü ayran
+// Bakır tasta köpüklü ayran: kubbeli, kabarcıklı köpük
 export function ayranBowl() {
   const mat = copper();
   const b = bowl({ r: 0.42, h: 0.38, material: mat });
+  const foamTex = T.latteTexture('ayran');
+  const foamGeo = new THREE.SphereGeometry(0.4, 48, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const p = foamGeo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const z = p.getZ(i);
+    const y = p.getY(i);
+    const n = (vnoise(x * 9, z * 9, 3) - 0.5) * 0.018;
+    p.setY(i, y * 0.13 + n);
+  }
+  foamGeo.computeVertexNormals();
   const foam = new THREE.Mesh(
-    new THREE.CircleGeometry(0.39, 48),
-    std({ map: T.latteTexture('ayran'), roughness: 0.85 })
+    foamGeo,
+    phys({ map: foamTex, bumpMap: foamTex, bumpScale: 2.5, roughness: 0.55, sheen: 0.6, sheenColor: '#ffffff', sheenRoughness: 0.4 })
   );
-  foam.rotation.x = -Math.PI / 2;
-  foam.position.y = 0.33;
-  const dome = new THREE.Mesh(
-    new THREE.SphereGeometry(0.39, 40, 12, 0, Math.PI * 2, 0, 0.35),
-    std({ map: T.latteTexture('ayran'), roughness: 0.85 })
-  );
-  dome.scale.y = 0.35;
-  dome.position.y = 0.3;
-  return group(b, foam, dome);
+  foam.position.y = 0.315;
+  return group(b, foam);
 }
 
 export function tumbler({ h = 0.9, r = 0.26, liquid = '#5b0e2d', fill = 0.82, emissive = '#2a0010', clear = false } = {}) {

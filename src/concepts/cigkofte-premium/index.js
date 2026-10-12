@@ -336,8 +336,9 @@ export default {
       'Taş değirmen bulguru, güneşte kurumuş isot ve katkısız nar ekşisiyle, her parçası avuçta şekillenen çiğ köfte. Ereğli’de online sipariş.',
   },
   brand: { name: 'Avuç', full: 'Avuç Çiğ Köfte Atölyesi', orderPrefix: 'AVC' },
-  stageOpts: { shadows: true, lights: { key: '#fff3e4', keyI: 2.5, rim: '#ffffff', rimI: 0.7 }, envIntensity: 0.7, fov: 28 },
+  stageOpts: { background: '#f3eee6', env: { warmth: 0.6 }, shadows: true, lights: { key: '#fff3e4', keyI: 2.5, rim: '#ffffff', rimI: 0.7 }, envIntensity: 0.7, fov: 28 },
   thumbOpts: {
+    env: { warmth: 0.6 },
     width: 640,
     height: 800,
     studio: { inner: '#efe8dd', outer: '#d6ccbd', shadow: 0.3, zoom: 1 },

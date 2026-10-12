@@ -20,7 +20,7 @@ export function kebabMeat({ len = 2.0, seed = 1, tint = '#ffffff', r = 0.115 } =
     pos.setXYZ(i, v.x, v.y * k * n * 0.92, v.z * k * n);
   }
   geo.computeVertexNormals();
-  return new THREE.Mesh(geo, K.std({ map: T.bakedTexture('meat'), roughness: 0.55, color: tint }));
+  return new THREE.Mesh(geo, K.std({ map: T.bakedTexture('meat'), bumpMap: T.bakedTexture('meat'), bumpScale: 1.5, roughness: 0.55, color: tint }));
 }
 
 // Şiş ve üzerinde parmak izli Adana kıyması (ya da tavuk/kuzu parçaları)
@@ -79,12 +79,27 @@ export function mangal({ w = 3.2, d = 1.2, count = 46, seed = 4 } = {}) {
   }
   const r = T.rng(seed);
   const emberTex = T.bakedTexture('ember');
-  const mats = [0.6, 1.2, 2.2].map((i) =>
-    K.std({ color: '#1c1714', roughness: 0.9, emissive: '#ff4a12', emissiveMap: emberTex, emissiveIntensity: i })
+  // Kömür: koyu, köşeli parçalar; kor yalnızca çatlaklardan sızar
+  const levels = [0.25, 0.7, 1.5];
+  const ash = T.bakedTexture('ash');
+  const mats = levels.map((i) =>
+    K.std({
+      map: ash,
+      roughness: 0.95,
+      emissive: '#ff4410',
+      emissiveMap: emberTex,
+      emissiveIntensity: i,
+      bumpMap: emberTex,
+      bumpScale: -1.2,
+    })
   );
-  const coalGeo = K.displace(new THREE.IcosahedronGeometry(0.13, 1), 0.035, 5, seed);
+  const coalGeos = [0, 1, 2].map((k) => {
+    const geo = K.displace(new THREE.IcosahedronGeometry(0.13, 2), 0.05, 3.5, seed + k);
+    geo.scale(1.15, 0.75, 0.95);
+    return geo;
+  });
   for (let i = 0; i < count; i++) {
-    const c = new THREE.Mesh(coalGeo, mats[Math.floor(r() * 3)]);
+    const c = new THREE.Mesh(coalGeos[i % 3], mats[Math.floor(r() * 3)]);
     c.position.set((r() - 0.5) * (w - 0.25), 0.1 + r() * 0.12, (r() - 0.5) * (d - 0.2));
     c.rotation.set(r() * 3, r() * 3, r() * 3);
     c.scale.setScalar(0.7 + r() * 0.7);
@@ -104,8 +119,8 @@ export function mangal({ w = 3.2, d = 1.2, count = 46, seed = 4 } = {}) {
   glow.position.y = 0.3;
   g.add(glow);
   g.userData.tick = (time) => {
-    mats.forEach((m, i) => (m.emissiveIntensity = [0.6, 1.2, 2.2][i] * (0.8 + 0.25 * Math.sin(time * (2 + i) + i * 2))));
-    glow.material.opacity = 0.8 + 0.2 * Math.sin(time * 3.1);
+    mats.forEach((m, i) => (m.emissiveIntensity = levels[i] * (0.8 + 0.25 * Math.sin(time * (2 + i) + i * 2))));
+    glow.material.opacity = 0.35 + 0.1 * Math.sin(time * 3.1);
   };
   return g;
 }
@@ -123,7 +138,7 @@ export function zirh() {
     K.metal('#d5d9de', 0.18)
   );
   g.add(blade);
-  const wood = K.std({ map: T.bakedTexture('wood'), roughness: 0.6 });
+  const wood = K.std({ map: T.bakedTexture('wood'), bumpMap: T.bakedTexture('wood'), bumpScale: 0.8, roughness: 0.6 });
   for (const sx of [-1, 1]) {
     const a = Math.PI * (sx < 0 ? 1.15 : 1.85);
     const x = Math.cos(a) * ((R1 + R2) / 2);
@@ -139,7 +154,7 @@ export function zirh() {
 }
 
 export function board({ w = 2.6, d = 1.7 } = {}) {
-  const m = new THREE.Mesh(K.roundedBox(w, 0.12, d, 0.05, 4), K.std({ map: T.bakedTexture('wood'), roughness: 0.65 }));
+  const m = new THREE.Mesh(K.roundedBox(w, 0.12, d, 0.05, 4), K.std({ map: T.bakedTexture('wood'), bumpMap: T.bakedTexture('wood'), bumpScale: 0.8, roughness: 0.65 }));
   return m;
 }
 
@@ -155,7 +170,7 @@ export function mincePile() {
     pos.setXYZ(i, v.x, v.y, v.z);
   }
   geo.computeVertexNormals();
-  return new THREE.Mesh(geo, K.std({ map: T.bakedTexture('mince'), roughness: 0.45 }));
+  return new THREE.Mesh(geo, K.std({ map: T.bakedTexture('mince'), bumpMap: T.bakedTexture('mince'), bumpScale: 1.5, roughness: 0.45 }));
 }
 
 // Lavaş: düz yaprak hâlinden dürüme sarılır (p: 0 düz, 1 tamamen sarılı)
@@ -236,7 +251,7 @@ export function kunefe() {
   g.add(tray);
   const top = new THREE.Mesh(
     new THREE.CylinderGeometry(0.68, 0.7, 0.14, 56),
-    [K.std({ color: '#c96a1a', roughness: 0.6 }), K.std({ map: T.bakedTexture('kunefe'), roughness: 0.55 }), K.std({ color: '#b8601a' })]
+    [K.std({ color: '#c96a1a', roughness: 0.6 }), K.std({ map: T.bakedTexture('kunefe'), bumpMap: T.bakedTexture('kunefe'), bumpScale: 1.5, roughness: 0.55 }), K.std({ color: '#b8601a' })]
   );
   top.position.y = 0.12;
   g.add(top);

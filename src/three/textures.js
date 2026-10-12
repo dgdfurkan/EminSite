@@ -122,7 +122,7 @@ export function kofteTexture() {
     const b = makeCanvas(S, S);
     const ctx = c.getContext('2d');
     const bx = b.getContext('2d');
-    ctx.fillStyle = '#7c2311';
+    ctx.fillStyle = '#7d2715';
     ctx.fillRect(0, 0, S, S);
     bx.fillStyle = '#808080';
     bx.fillRect(0, 0, S, S);
@@ -146,8 +146,8 @@ export function kofteTexture() {
       }
     }
     const specks = [
-      { color: '#a24726', count: 6200, size: [1.5, 3.4], bump: 1 },
-      { color: '#c16a3a', count: 1300, size: [1.1, 2.2], bump: 1 },
+      { color: '#a0442a', count: 6400, size: [1.5, 3.4], bump: 1 },
+      { color: '#b06244', count: 1100, size: [1.1, 2.2], bump: 1 },
       { color: '#3f0c04', count: 2400, size: [1.2, 2.8], bump: -1 },
       { color: '#4f7d2a', count: 380, size: [1.4, 3.6], aspect: 0.38, bump: 0 },
       { color: '#e8c79c', count: 90, size: [1, 2.2], bump: 1 },
@@ -892,6 +892,24 @@ export function bakedTexture(kind) {
         ctx.ellipse(r() * S, r() * S, 3.2, 1.6, r() * 3, 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (kind === 'hammered') {
+      ctx.fillStyle = '#9a9a9a';
+      ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < 420; i++) {
+        const x = r() * S;
+        const y = r() * S;
+        const rad = 8 + r() * 22;
+        for (const [dx, dy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) {
+          const g = ctx.createRadialGradient(x + dx - rad * 0.2, y + dy - rad * 0.2, 0, x + dx, y + dy, rad);
+          g.addColorStop(0, 'rgba(60,60,60,0.55)');
+          g.addColorStop(0.7, 'rgba(140,140,140,0.25)');
+          g.addColorStop(1, 'rgba(190,190,190,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(x + dx, y + dy, rad, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     } else if (kind === 'slate') {
       ctx.fillStyle = '#2a2a2b';
       ctx.fillRect(0, 0, S, S);
@@ -938,16 +956,24 @@ export function bakedTexture(kind) {
         ctx.lineTo(S, i + (r() - 0.5) * 4);
         ctx.stroke();
       }
+    } else if (kind === 'ash') {
+      ctx.fillStyle = '#242120';
+      ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < 60; i++) blot(ctx, r() * S, r() * S, 20 + r() * 60, r() > 0.6 ? '#8f8a85' : '#141211', 0.5);
+      for (let i = 0; i < 1600; i++) {
+        ctx.fillStyle = r() > 0.5 ? 'rgba(200,195,190,0.35)' : 'rgba(0,0,0,0.4)';
+        ctx.fillRect(r() * S, r() * S, 1.5, 1.5);
+      }
     } else if (kind === 'ember') {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, S, S);
       ctx.strokeStyle = '#ffffff';
       ctx.lineCap = 'round';
-      for (let i = 0; i < 70; i++) {
+      for (let i = 0; i < 90; i++) {
         let x = r() * S;
         let y = r() * S;
-        ctx.lineWidth = 1 + r() * 4;
-        ctx.globalAlpha = 0.5 + r() * 0.5;
+        ctx.lineWidth = 0.8 + r() * 2.2;
+        ctx.globalAlpha = 0.45 + r() * 0.55;
         ctx.beginPath();
         ctx.moveTo(x, y);
         for (let k = 0; k < 5; k++) {
@@ -958,7 +984,7 @@ export function bakedTexture(kind) {
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
-      for (let i = 0; i < 30; i++) blot(ctx, r() * S, r() * S, 20 + r() * 40, '#ffffff', 0.35);
+      for (let i = 0; i < 14; i++) blot(ctx, r() * S, r() * S, 14 + r() * 26, '#ffffff', 0.2);
     } else if (kind === 'char') {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, S, S);
@@ -1021,3 +1047,74 @@ export function radialTexture(inner = 'rgba(0,0,0,0.6)', outer = 'rgba(0,0,0,0)'
 export function hexA(hex, a) {
   return hexToRgba(hex, a);
 }
+
+// Pirinç tepsi için kalem işi oyma deseni (lathe UV'sine göre: u çevre, v profil)
+// topStart: üst yüzeyin profildeki v başlangıcı (kenar), merkez v=1
+export function engravedTrayTexture(topStart = 0.3125) {
+  return cached('engraved:' + topStart, () => {
+    const W = 2048;
+    const H = 1024;
+    const c = makeCanvas(W, H);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    const yOf = (f) => f * (1 - topStart) * H; // f: 0 merkez, 1 kenar
+    ctx.strokeStyle = '#7a7a7a';
+    ctx.lineCap = 'round';
+    // halkalar
+    for (const [f, w] of [[0.96, 5], [0.92, 3], [0.63, 3], [0.6, 5], [0.24, 3], [0.21, 2]]) {
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      ctx.moveTo(0, yOf(f));
+      ctx.lineTo(W, yOf(f));
+      ctx.stroke();
+    }
+    // kemer ve lale motifli bant
+    const n = 28;
+    ctx.lineWidth = 3;
+    for (let i = 0; i < n; i++) {
+      const x = (i + 0.5) * (W / n);
+      const w = W / n;
+      const y0 = yOf(0.9);
+      const y1 = yOf(0.65);
+      ctx.beginPath();
+      ctx.moveTo(x - w * 0.38, y0);
+      ctx.lineTo(x - w * 0.38, (y0 + y1) / 2);
+      ctx.quadraticCurveTo(x - w * 0.38, y1, x, y1);
+      ctx.quadraticCurveTo(x + w * 0.38, y1, x + w * 0.38, (y0 + y1) / 2);
+      ctx.lineTo(x + w * 0.38, y0);
+      ctx.stroke();
+      // lale
+      const ty = (y0 + y1) / 2 + 6;
+      ctx.beginPath();
+      ctx.moveTo(x, y0 - 4);
+      ctx.lineTo(x, ty);
+      ctx.moveTo(x, ty);
+      ctx.quadraticCurveTo(x - w * 0.18, ty - 8, x - w * 0.12, ty - 26);
+      ctx.moveTo(x, ty);
+      ctx.quadraticCurveTo(x + w * 0.18, ty - 8, x + w * 0.12, ty - 26);
+      ctx.moveTo(x, ty);
+      ctx.lineTo(x, ty - 30);
+      ctx.stroke();
+    }
+    // ortada ışınsal yıldız
+    ctx.lineWidth = 2.5;
+    for (let i = 0; i < 32; i++) {
+      const x = (i / 32) * W;
+      ctx.beginPath();
+      ctx.moveTo(x, yOf(0.03));
+      ctx.lineTo(x, yOf(i % 2 ? 0.14 : 0.19));
+      ctx.stroke();
+    }
+    // hafif fırça izleri
+    const r = rng(17);
+    ctx.globalAlpha = 0.08;
+    for (let i = 0; i < 900; i++) {
+      ctx.fillStyle = r() > 0.5 ? '#000' : '#fff';
+      ctx.fillRect(r() * W, r() * H, 30 + r() * 80, 1);
+    }
+    ctx.globalAlpha = 1;
+    return toTexture(c, { srgb: false });
+  });
+}
+

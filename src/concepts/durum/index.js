@@ -405,10 +405,12 @@ export default {
     badgeIcon: icon.flame,
   },
   stageOpts: {
-    lights: { key: '#ffd9b8', keyI: 1.7, rim: '#ff8a4a', rimI: 1.8, fill: '#ff6a2a', fillI: 14 },
+    env: { dark: true, warmth: 0.8 },
+    lights: { key: '#ffd9b8', keyI: 1.9, rim: '#ff8a4a', rimI: 1.8, fill: '#ff6a2a', fillI: 6 },
     envIntensity: 0.5,
   },
   thumbOpts: {
+    env: { dark: true, warmth: 0.8 },
     lights: { key: '#ffe2c8', keyI: 2.1, rim: '#ff9a5a', rimI: 1.4, fill: '#ff6a2a', fillI: 6 },
     envIntensity: 0.75,
     shadowOpacity: 0.55,
