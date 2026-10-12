@@ -70,13 +70,15 @@ npm run preview
 
 ## Yayınlama (GitHub Pages)
 
-Depo GitHub'a gönderildikten sonra:
+Canlı adres: **https://dgdfurkan.github.io/EminSite/**
 
-1. GitHub'da depo **Settings → Pages** bölümüne gidin.
-2. **Source** olarak **GitHub Actions** seçin.
-3. `main` dalına yapılan her gönderimde `.github/workflows/deploy.yml` siteyi otomatik derleyip yayınlar.
+GitHub Pages, deponun `gh-pages` dalından yayın yapar. Kodda değişiklik yaptıktan sonra siteyi güncellemek için:
 
-Site göreli yollarla derlendiği için `kullanici.github.io/depo-adi/` altında sorunsuz çalışır.
+```bash
+npm run deploy
+```
+
+Bu komut siteyi derler ve `gh-pages` dalına gönderir; birkaç dakika içinde canlı adres güncellenir. Site göreli yollarla derlendiği için `kullanici.github.io/depo-adi/` altında sorunsuz çalışır.
 
 ## Teknik altyapı
 
