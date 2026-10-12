@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Konsept temaları: renk, yazı tipi, köşe yuvarlaklığı
+   ========================================================================== */
+
+/* --- Yoğrum Çiğ Köfte: sıcak, oyuncu, iştah açıcı ----------------------- */
+html[data-concept='cigkofte'] {
+  --bg: #fff4e8;
+  --bg-2: #ffe8d2;
+  --surface: #ffffff;
+  --surface-2: #fff9f2;
+  --ink: #2a0a0c;
+  --ink-soft: #6e4b46;
+  --line: rgba(42, 10, 12, 0.12);
+  --primary: #d7262f;
+  --primary-deep: #9e1520;
+  --primary-ink: #fff4e8;
+  --accent: #5fa634;
+  --accent-2: #ffc93c;
+  --accent-3: #f28a2e;
+  --dark: #2a0a0c;
+  --dark-ink: #fff4e8;
+  --focus: #2a0a0c;
+
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Black', system-ui, sans-serif;
+  --font-body: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --display-weight: 800;
+  --display-stretch: 78%;
+  --display-tracking: -0.035em;
+  --display-leading: 0.9;
+  --em-color: var(--primary);
+
+  --r-lg: 34px;
+  --r-md: 22px;
+  --r-sm: 14px;
+  --r-btn: 999px;
+  --shadow-card: 0 1px 0 rgba(42, 10, 12, 0.04), 0 18px 40px -18px rgba(158, 21, 32, 0.28);
+  --shadow-pop: 0 30px 80px -30px rgba(42, 10, 12, 0.45);
+  --thumb-bg: radial-gradient(circle at 50% 60%, #ffd9b3 0%, #ffe8d2 55%, #fff4e8 100%);
+}
+
+/* --- KOR Ocakbaşı Dürüm: karanlık, ateşli, sokak ruhu ------------------- */
+html[data-concept='durum'] {
+  --bg: #110e0c;
+  --bg-2: #1a1512;
+  --surface: #211b17;
+  --surface-2: #2a231e;
+  --ink: #f4e6cf;
+  --ink-soft: #b8a891;
+  --line: rgba(244, 230, 207, 0.12);
+  --primary: #ff5a1f;
+  --primary-deep: #d63f0c;
+  --primary-ink: #110e0c;
+  --accent: #7fa650;
+  --accent-2: #ffb23e;
+  --accent-3: #c7372f;
+  --dark: #0a0807;
+  --dark-ink: #f4e6cf;
+  --focus: #ffb23e;
+  --eyebrow: #ffb23e;
+
+  --font-display: 'Anton', 'Impact', 'Arial Narrow', sans-serif;
+  --font-body: 'Archivo Variable', system-ui, sans-serif;
+  --display-weight: 400;
+  --display-stretch: 100%;
+  --display-tracking: 0.005em;
+  --display-leading: 0.92;
+  --display-case: uppercase;
+  --em-color: var(--primary);
+
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-sm: 6px;
+  --r-btn: 8px;
+  --btn-case: uppercase;
+  --btn-tracking: 0.06em;
+  --shadow-card: 0 0 0 1px rgba(244, 230, 207, 0.06), 0 24px 50px -24px rgba(0, 0, 0, 0.9);
+  --shadow-pop: 0 40px 100px -30px rgba(0, 0, 0, 0.95);
+  --thumb-bg: radial-gradient(circle at 50% 70%, rgba(255, 90, 31, 0.28) 0%, rgba(255, 90, 31, 0.06) 45%, transparent 72%), #1a1512;
+}
+
+/* --- Dem Telve Kahve Evi: sakin, zarif, sıcak --------------------------- */
+html[data-concept='kafe'] {
+  --bg: #f5eee3;
+  --bg-2: #ebdfcd;
+  --surface: #fffbf4;
+  --surface-2: #faf4ea;
+  --ink: #2b1b13;
+  --ink-soft: #6f5b4d;
+  --line: rgba(43, 27, 19, 0.13);
+  --primary: #b95d3b;
+  --primary-deep: #8f4127;
+  --primary-ink: #fff8ee;
+  --accent: #7d8c66;
+  --accent-2: #e2c08a;
+  --accent-3: #c69a55;
+  --dark: #2b1b13;
+  --dark-ink: #f5eee3;
+  --focus: #2b1b13;
+
+  --font-display: 'Fraunces Variable', 'Georgia', serif;
+  --font-body: 'Manrope Variable', system-ui, sans-serif;
+  --display-weight: 420;
+  --display-stretch: 100%;
+  --display-tracking: -0.025em;
+  --display-leading: 0.98;
+  --display-fvs: 'SOFT' 100, 'WONK' 0, 'opsz' 144;
+  --em-style: italic;
+  --em-color: var(--primary);
+
+  --r-lg: 28px;
+  --r-md: 20px;
+  --r-sm: 12px;
+  --r-btn: 999px;
+  --shadow-card: 0 1px 0 rgba(43, 27, 19, 0.05), 0 22px 44px -22px rgba(43, 27, 19, 0.35);
+  --shadow-pop: 0 40px 90px -30px rgba(43, 27, 19, 0.5);
+  --thumb-bg: radial-gradient(circle at 50% 62%, #f1dcc0 0%, #ebdfcd 58%, #f5eee3 100%);
+}

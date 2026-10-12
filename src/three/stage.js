@@ -1,0 +1,385 @@
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { gsap } from 'gsap';
+import { fit, contactShadow, tickAll } from './kit.js';
+
+export function supportsWebGL() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl')));
+  } catch {
+    return false;
+  }
+}
+
+function makeRenderer({ alpha = true, preserve = false } = {}) {
+  const r = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha,
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: preserve,
+  });
+  r.setClearColor(0x000000, 0);
+  r.outputColorSpace = THREE.SRGBColorSpace;
+  r.toneMapping = THREE.NeutralToneMapping;
+  r.toneMappingExposure = 1;
+  r.domElement.addEventListener('webglcontextlost', (e) => e.preventDefault());
+  return r;
+}
+
+function makeEnvironment(renderer, scene, intensity = 1) {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const env = new RoomEnvironment();
+  scene.environment = pmrem.fromScene(env, 0.04).texture;
+  scene.environmentIntensity = intensity;
+  env.dispose?.();
+  pmrem.dispose();
+}
+
+function addLights(scene, { key = '#fff1dc', keyI = 2.1, rim = '#ffffff', rimI = 1.1, fill = null, fillI = 0 } = {}) {
+  const k = new THREE.DirectionalLight(key, keyI);
+  k.position.set(3, 5, 4);
+  const r = new THREE.DirectionalLight(rim, rimI);
+  r.position.set(-4, 2, -3);
+  scene.add(k, r);
+  if (fill) {
+    const f = new THREE.PointLight(fill, fillI, 12, 1.4);
+    f.position.set(0, -2.4, 2);
+    scene.add(f);
+  }
+  return { key: k, rim: r };
+}
+
+// Malzemeleri silmek three.js'in derlenmiş shader programlarını da bırakır;
+// küçük görsel ve görüntüleyicide aynı programlar tekrar kullanılacağı için yalnızca geometri silinir.
+export function disposeObject(obj, { materials = true } = {}) {
+  obj.traverse((o) => {
+    if (o.geometry) o.geometry.dispose();
+    if (materials && o.material) {
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+    }
+  });
+}
+
+// ============================================================================
+// Ana sahne: hero ve hikâye bölümünün arkasındaki sabit tuval
+// ============================================================================
+export class Stage {
+  constructor(container, opts = {}) {
+    this.container = container;
+    this.isMobile = window.innerWidth < 768;
+    this.renderer = makeRenderer();
+    container.appendChild(this.renderer.domElement);
+    this.scene = new THREE.Scene();
+    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.9);
+    this.lights = addLights(this.scene, opts.lights);
+    this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+    this.camera.position.set(0, 0, 12);
+    this.root = new THREE.Group();
+    this.scene.add(this.root);
+    this.pointer = { x: 0, y: 0, sx: 0, sy: 0 };
+    this.active = true;
+    this.hidden = false;
+    this.updaters = new Set();
+    this.resizers = new Set();
+    this.elapsed = 0;
+    this._last = performance.now();
+
+    this._onPointer = (e) => {
+      this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      this.pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener('pointermove', this._onPointer, { passive: true });
+
+    this._lastW = 0;
+    this._lastH = 0;
+    this.resize = this.resize.bind(this);
+    window.addEventListener('resize', this.resize);
+    this.resize(true);
+
+    this._onVis = () => (this.hidden = document.hidden);
+    document.addEventListener('visibilitychange', this._onVis);
+
+    this.tick = this.tick.bind(this);
+    gsap.ticker.add(this.tick);
+  }
+
+  get view() {
+    const h = 2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this.camera.position.z;
+    return { width: h * this.camera.aspect, height: h, aspect: this.camera.aspect };
+  }
+
+  resize(force) {
+    const w = this.container.clientWidth || window.innerWidth;
+    const h = this.container.clientHeight || window.innerHeight;
+    // Mobil tarayıcı adres çubuğu açılıp kapanınca gereksiz yeniden boyutlandırma yapma
+    if (force !== true && w === this._lastW && Math.abs(h - this._lastH) < 140) return;
+    this._lastW = w;
+    this._lastH = h;
+    this.isMobile = w < 768;
+    const pr = Math.min(window.devicePixelRatio || 1, this.isMobile ? 1.5 : 1.75);
+    this.renderer.setPixelRatio(pr);
+    this.renderer.setSize(w, h, false);
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    this.resizers.forEach((fn) => fn(this.view, this.isMobile));
+  }
+
+  onUpdate(fn) {
+    this.updaters.add(fn);
+    return () => this.updaters.delete(fn);
+  }
+
+  onResize(fn) {
+    this.resizers.add(fn);
+    fn(this.view, this.isMobile);
+    return () => this.resizers.delete(fn);
+  }
+
+  setActive(v) {
+    this.active = v;
+    this.container.style.visibility = v ? 'visible' : 'hidden';
+  }
+
+  tick() {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - this._last) / 1000);
+    this._last = now;
+    if (!this.active || this.hidden) return;
+    this.elapsed += dt;
+    const p = this.pointer;
+    p.sx += (p.x - p.sx) * Math.min(1, dt * 3.5);
+    p.sy += (p.y - p.sy) * Math.min(1, dt * 3.5);
+    this.updaters.forEach((fn) => fn(this.elapsed, dt));
+    tickAll(this.root, this.elapsed);
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  // İlk karede tüm shader'ları derle (kaydırırken takılma olmasın)
+  warmup() {
+    this.renderer.compile(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+// ============================================================================
+// Ürün küçük görselleri: modelleri tek tek çizip görsele dönüştürür
+// ============================================================================
+export class ThumbRenderer {
+  constructor(size = 512, opts = {}) {
+    this.size = size;
+    this.renderer = makeRenderer({ preserve: true });
+    this.renderer.setPixelRatio(1);
+    this.renderer.setSize(size, size, false);
+    this.scene = new THREE.Scene();
+    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.95);
+    addLights(this.scene, opts.lights);
+    this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
+    this.shadowOpacity = opts.shadowOpacity ?? 0.34;
+  }
+
+  async render(build, view = {}) {
+    const obj = build();
+    const holder = fit(obj, 2);
+    if (view.rot) holder.rotation.set(view.rot[0] || 0, view.rot[1] || 0, view.rot[2] || 0);
+    this.scene.add(holder);
+    holder.updateMatrixWorld(true);
+
+    const box = new THREE.Box3().setFromObject(holder);
+    const center = box.getCenter(new THREE.Vector3());
+    const sphere = box.getBoundingSphere(new THREE.Sphere());
+
+    let shadow = null;
+    if (view.shadow !== false) {
+      const sz = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 1.25;
+      shadow = contactShadow(sz, this.shadowOpacity);
+      shadow.position.set(center.x, box.min.y + 0.002, center.z);
+      this.scene.add(shadow);
+    }
+
+    const el = view.el ?? 0.42;
+    const az = view.az ?? 0.5;
+    const fov = THREE.MathUtils.degToRad(this.camera.fov / 2);
+    const dist = (sphere.radius / Math.sin(fov)) * (view.zoom ? 1 / view.zoom : 0.98);
+    const dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+    this.camera.position.copy(center).addScaledVector(dir, dist);
+    this.camera.lookAt(center.x, center.y - (view.lookDown ?? 0), center.z);
+
+    tickAll(holder, 1.2);
+    this.renderer.render(this.scene, this.camera);
+    const blob = await new Promise((res) => this.renderer.domElement.toBlob(res, 'image/webp', 0.92));
+
+    this.scene.remove(holder);
+    disposeObject(holder, { materials: false });
+    if (shadow) {
+      this.scene.remove(shadow);
+      disposeObject(shadow, { materials: false });
+    }
+    return blob ? URL.createObjectURL(blob) : null;
+  }
+
+  dispose() {
+    this.renderer.dispose();
+    this.renderer.forceContextLoss?.();
+  }
+}
+
+// ============================================================================
+// Ürün penceresindeki canlı, sürüklenebilir 3D görüntüleyici
+// ============================================================================
+export class Viewer {
+  constructor(opts = {}) {
+    this.renderer = makeRenderer();
+    this.renderer.domElement.setAttribute('aria-hidden', 'true');
+    this.scene = new THREE.Scene();
+    makeEnvironment(this.renderer, this.scene, opts.envIntensity ?? 0.95);
+    addLights(this.scene, opts.lights);
+    this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
+    this.pivot = new THREE.Group();
+    this.scene.add(this.pivot);
+    this.rotY = 0;
+    this.velY = 0;
+    this.tilt = 0;
+    this.dragging = false;
+    this.running = false;
+    this.elapsed = 0;
+    this.view = {};
+    this.shadowOpacity = opts.shadowOpacity ?? 0.3;
+    this.loop = this.loop.bind(this);
+    this.resize = this.resize.bind(this);
+    this._ro = new ResizeObserver(this.resize);
+  }
+
+  // Tuvali verilen kaba yerleştirir ve sürükleme olaylarını bağlar
+  attach(container) {
+    this._abort?.abort();
+    this._ro.disconnect();
+    this.container = container;
+    container.prepend(this.renderer.domElement);
+    this._ro.observe(container);
+    const ac = new AbortController();
+    this._abort = ac;
+    const o = { signal: ac.signal };
+    let lastX = 0;
+    let lastY = 0;
+    container.addEventListener(
+      'pointerdown',
+      (e) => {
+        this.dragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        container.setPointerCapture?.(e.pointerId);
+      },
+      o
+    );
+    container.addEventListener(
+      'pointermove',
+      (e) => {
+        if (!this.dragging) return;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        this.velY = dx * 0.012;
+        this.rotY += this.velY;
+        this.tilt = Math.max(-0.35, Math.min(0.35, this.tilt + dy * 0.004));
+      },
+      o
+    );
+    const end = () => (this.dragging = false);
+    container.addEventListener('pointerup', end, o);
+    container.addEventListener('pointercancel', end, o);
+    container.addEventListener('lostpointercapture', end, o);
+  }
+
+  resize() {
+    if (!this.container) return;
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    if (!w || !h) return;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.setSize(w, h, false);
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    this.frame();
+  }
+
+  frame() {
+    if (!this.sphere) return;
+    const fov = THREE.MathUtils.degToRad(this.camera.fov / 2);
+    const fovX = Math.atan(Math.tan(fov) * this.camera.aspect);
+    const dist = (this.sphere.radius / Math.sin(Math.min(fov, fovX))) * 1.02;
+    const el = this.view.el ?? 0.38;
+    this.camera.position.set(0, Math.sin(el) * dist + this.sphere.center.y, Math.cos(el) * dist);
+    this.camera.lookAt(0, this.sphere.center.y, 0);
+  }
+
+  show(build, view = {}) {
+    this.clear();
+    this.view = view;
+    const holder = fit(build(), 2);
+    if (view.rot) holder.rotation.set(view.rot[0] || 0, view.rot[1] || 0, view.rot[2] || 0);
+    holder.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(holder);
+    const c = box.getCenter(new THREE.Vector3());
+    holder.position.x -= c.x;
+    holder.position.z -= c.z;
+    this.pivot.add(holder);
+    const sz = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 1.25;
+    const sh = contactShadow(sz, this.shadowOpacity);
+    sh.position.y = box.min.y + 0.002;
+    this.pivot.add(sh);
+    this.holder = holder;
+    this.shadow = sh;
+    this.pivot.rotation.set(0, 0, 0);
+    this.pivot.updateMatrixWorld(true);
+    box.setFromObject(this.pivot);
+    this.sphere = box.getBoundingSphere(new THREE.Sphere());
+    this.rotY = view.az ?? 0.5;
+    this.velY = 0.004;
+    this.tilt = 0;
+    this.resize();
+    if (!this.running) {
+      this.running = true;
+      this._last = performance.now();
+      gsap.ticker.add(this.loop);
+    }
+  }
+
+  loop() {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - this._last) / 1000);
+    this._last = now;
+    this.elapsed += dt;
+    if (!this.dragging) {
+      this.velY += (0.0045 - this.velY) * Math.min(1, dt * 1.5);
+      this.rotY += this.velY;
+      this.tilt += (0 - this.tilt) * Math.min(1, dt * 2);
+    }
+    this.pivot.rotation.y = this.rotY;
+    this.pivot.rotation.x = this.tilt;
+    tickAll(this.pivot, this.elapsed);
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  clear() {
+    if (this.holder) {
+      this.pivot.remove(this.holder);
+      disposeObject(this.holder, { materials: false });
+      this.holder = null;
+    }
+    if (this.shadow) {
+      this.pivot.remove(this.shadow);
+      disposeObject(this.shadow, { materials: false });
+      this.shadow = null;
+    }
+  }
+
+  stop() {
+    if (this.running) {
+      gsap.ticker.remove(this.loop);
+      this.running = false;
+    }
+    this.clear();
+  }
+}
