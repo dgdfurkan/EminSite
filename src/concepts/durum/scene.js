@@ -60,7 +60,7 @@ export function build({ stage, gsap, storyTl }) {
   story.tilt.add(lift);
   storyEnter(gsap, lift);
 
-  const st = { chop: 0, spin: 0, drop: 0, roll: 0, paper: 0, upright: 0, sheet: 0 };
+  const st = { chop: 0, spin: 0, drop: 0, roll: 0, paper: 0, upright: 0, sheet: 0, swap: 0 };
 
   // 1) Tahta, kıyma, zırh
   const prep = new THREE.Group();
@@ -153,6 +153,10 @@ export function build({ stage, gsap, storyTl }) {
   rollG.add(paper);
   const rollPivot = new THREE.Group();
   rollPivot.add(rollG);
+  // Sarma bitince yerini gerçek, kâğıtlı ve harcı görünen dürüm alır
+  const finalWrap = M.korWrap({ radius: 0.34, length: 1.9, seed: 4 });
+  finalWrap.scale.setScalar(0.0001);
+  rollPivot.add(finalWrap);
   rollPivot.position.set(W / 2, -0.5, 0);
   rollPivot.scale.setScalar(0.0001);
   lift.add(rollPivot);
@@ -173,6 +177,8 @@ export function build({ stage, gsap, storyTl }) {
     knifePivot.position.x = 0.1 + Math.sin(st.chop * Math.PI * 3.5) * 0.25;
     skewers.forEach((s, i) => (s.rotation.x = st.spin * Math.PI * (3 + i * 0.4)));
     rollPivot.scale.setScalar(Math.max(0.0001, st.sheet * (1 + st.upright * 0.25)));
+    rollG.scale.setScalar(Math.max(0.0001, 1 - st.swap));
+    finalWrap.scale.setScalar(Math.max(0.0001, st.swap));
     rollG.rotation.x = -Math.PI / 2 * st.upright;
     rollPivot.position.x = W / 2 * (1 - st.upright);
     rollPivot.position.y = -0.5 + st.upright * 0.5;
@@ -195,6 +201,7 @@ export function build({ stage, gsap, storyTl }) {
     .to(st, { roll: 1, duration: 0.55, ease: 'power1.inOut' }, 3.0)
     .to(st, { paper: 1, duration: 0.2 }, 3.55)
     .to(st, { upright: 1, duration: 0.35, ease: 'power2.inOut' }, 3.6)
+    .to(st, { swap: 1, duration: 0.12, ease: 'power1.inOut' }, 3.82)
     .to(lift.rotation, { y: 0, duration: 0.4 }, 3.55);
 
   return {

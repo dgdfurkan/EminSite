@@ -429,20 +429,24 @@ export function wrap({
   const half = length / 2;
   const lavMat = std({ map: T.lavasTexture(seed % 3, 1.5), roughness: 0.78, side: THREE.DoubleSide });
 
-  const lavGeo = new THREE.CylinderGeometry(radius, radius * 0.97, length, 64, 26, true);
+  const lavGeo = new THREE.CylinderGeometry(radius, radius * 0.97, length, 64, 30, true);
   const pos = lavGeo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const y = pos.getY(i);
     const z = pos.getZ(i);
     const a = Math.atan2(z, x);
-    let k = 1 + (vnoise(Math.cos(a) * 2 + seed, y * 3, Math.sin(a) * 2) - 0.5) * 0.05;
+    // hafif basık kesit, lavaş kırışıklıkları
+    let k = 1 + (vnoise(Math.cos(a) * 2 + seed, y * 3, Math.sin(a) * 2) - 0.5) * 0.06;
+    k += Math.sin(a * 9 + y * 2) * 0.008;
     let yy = y;
-    if (y > half - 0.02) {
-      yy += (vnoise(Math.cos(a) * 3, seed, Math.sin(a) * 3) - 0.4) * 0.12;
-      k *= 1.05;
+    const top = smooth(half - 0.18, half, y);
+    if (top > 0) {
+      // ağız: düzensiz kenar, hafif dışa açılma ve kıvrım
+      yy += top * (vnoise(Math.cos(a) * 3, seed, Math.sin(a) * 3) - 0.35) * 0.16;
+      k *= 1 + top * (0.04 + Math.sin(a * 5 + seed) * 0.025);
     }
-    pos.setXYZ(i, x * k, yy, z * k);
+    pos.setXYZ(i, x * k, yy, z * k * 0.92);
   }
   lavGeo.computeVertexNormals();
   g.add(new THREE.Mesh(lavGeo, lavMat));
@@ -453,6 +457,7 @@ export function wrap({
     lavMat
   );
   flap.rotation.y = 2.2;
+  flap.scale.z = 0.92;
   g.add(flap);
 
   const inner = new THREE.Mesh(
@@ -460,6 +465,7 @@ export function wrap({
     lavMat
   );
   inner.position.y = half - 0.14;
+  inner.scale.z = 0.92;
   g.add(inner);
 
   // harç
@@ -469,6 +475,7 @@ export function wrap({
   );
   top.rotation.x = -Math.PI / 2;
   top.position.y = half - 0.03;
+  top.scale.y = 0.92;
   g.add(top);
 
   const chunkPal = {
@@ -481,14 +488,15 @@ export function wrap({
     doner: ['#cf9450', '#b77a38', '#e3ae6c'],
     etdoner: ['#6e3a1a', '#82461f', '#542a12'],
   }[filling] || ['#9a361a'];
-  const chunkGeo = roundedBox(0.12, 0.08, 0.1, 0.03, 2);
-  for (let i = 0; i < 9; i++) {
-    const c = new THREE.Mesh(chunkGeo, std({ color: chunkPal[i % chunkPal.length], roughness: 0.6 }));
+  const chunkGeo = displace(roundedBox(0.12, 0.08, 0.1, 0.03, 2), 0.012, 9, seed);
+  const chunkMats = chunkPal.map((c) => std({ color: c, roughness: 0.6 }));
+  for (let i = 0; i < 15; i++) {
+    const c = new THREE.Mesh(chunkGeo, chunkMats[i % chunkMats.length]);
     const a = r() * Math.PI * 2;
-    const d = Math.sqrt(r()) * radius * 0.6;
-    c.position.set(Math.cos(a) * d, half + 0.0 + r() * 0.05, Math.sin(a) * d);
+    const d = Math.sqrt(r()) * radius * 0.62;
+    c.position.set(Math.cos(a) * d, half - 0.01 + r() * 0.1 * (1 - d / radius), Math.sin(a) * d * 0.92);
     c.rotation.set(r() * 2, r() * 2, r() * 2);
-    c.scale.setScalar(0.8 + r() * 0.6);
+    c.scale.setScalar(0.8 + r() * 0.7);
     g.add(c);
   }
   if (filling !== 'cigkofte') {
@@ -530,7 +538,7 @@ export function wrap({
         const t = j / rows;
         const y = y0 + (topY - y0) * t;
         const crinkle = 1 + (vnoise(u * 18, y * 6, seed) - 0.5) * 0.035;
-        positions.push(Math.sin(a) * pr * crinkle, y, Math.cos(a) * pr * crinkle);
+        positions.push(Math.sin(a) * pr * crinkle, y, Math.cos(a) * pr * crinkle * 0.92);
         uvs.push(u, (y - y0) / (Math.PI * pr));
       }
     }
@@ -550,11 +558,13 @@ export function wrap({
     g.add(new THREE.Mesh(pg, pmat));
     const bottom = new THREE.Mesh(new THREE.CircleGeometry(pr, 48), pmat);
     bottom.rotation.x = Math.PI / 2;
+    bottom.scale.y = 0.92;
     bottom.position.y = y0;
     g.add(bottom);
   } else {
     const cap = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.97, 48), lavMat);
     cap.rotation.x = Math.PI / 2;
+    cap.scale.y = 0.92;
     cap.position.y = -half;
     g.add(cap);
   }
@@ -609,7 +619,7 @@ export function ayranBowl() {
   return group(b, foam, dome);
 }
 
-export function tumbler({ h = 0.9, r = 0.26, liquid = '#5b0e2d', fill = 0.82, emissive = '#2a0010' } = {}) {
+export function tumbler({ h = 0.9, r = 0.26, liquid = '#5b0e2d', fill = 0.82, emissive = '#2a0010', clear = false } = {}) {
   const glass = lathe(
     [
       [0, 0],
@@ -633,8 +643,11 @@ export function tumbler({ h = 0.9, r = 0.26, liquid = '#5b0e2d', fill = 0.82, em
   );
   const liqMesh = new THREE.Mesh(
     liq,
-    phys({ color: liquid, roughness: 0.08, clearcoat: 1, emissive, emissiveIntensity: 0.5 })
+    clear
+      ? phys({ color: liquid, roughness: 0.02, clearcoat: 1, transparent: true, opacity: 0.28, depthWrite: false })
+      : phys({ color: liquid, roughness: 0.08, clearcoat: 1, emissive, emissiveIntensity: 0.5 })
   );
+  if (clear) liqMesh.renderOrder = 1;
   return group(liqMesh, glassMesh(glass));
 }
 

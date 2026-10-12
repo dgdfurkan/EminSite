@@ -33,14 +33,51 @@ const demMark = (c = {}) => `
   <path d="M21 16C19.5 13.5 22.5 12 21 9.5M27 16C25.5 13.5 28.5 12 27 9.5" stroke="${c.glass || '#FFF8EE'}" stroke-width="1.8" stroke-linecap="round" fill="none"/>
 </svg>`;
 
+// Premium seri: ince çizgili, tek renkli işaretler
+const lineSvg = (cls, body, c = {}) =>
+  `<svg class="mark mark--line ${cls}" viewBox="0 0 48 48" fill="none" stroke="${c.stroke || 'currentColor'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
+
+const avucMark = (c) =>
+  lineSvg(
+    'mark--avuc',
+    '<path d="M7.5 28c0-7.2 6.6-12.5 16.5-12.5S40.5 20.8 40.5 28 34 37 24 37 7.5 35.2 7.5 28Z"/><path d="M16.4 17.6c-1.5 3.2-1.5 6.4 0 9.6M23 15.7c-1.6 3.4-1.6 6.9 0 10.3M29.6 15.9c-1.6 3.3-1.6 6.7 0 10M35.6 18.4c-1.3 2.9-1.3 5.6 0 8.4"/>',
+    c
+  );
+
+const zirhMark = (c) =>
+  lineSvg(
+    'mark--zirh',
+    '<path d="M7 19.5c3.8 11.5 30.2 11.5 34 0"/><path d="M10.5 21.4c4.6 7.4 22.4 7.4 27 0"/><path d="M7 19.5V10M41 19.5V10"/><circle cx="7" cy="8" r="2"/><circle cx="41" cy="8" r="2"/>',
+    c
+  );
+
+const sukunMark = (c) =>
+  lineSvg(
+    'mark--sukun',
+    '<path d="M12 21h21v4.5c0 5.8-4.7 10.5-10.5 10.5S12 31.3 12 25.5V21Z"/><path d="M33 23.5h1.8a3.3 3.3 0 0 1 0 6.6H32"/><path d="M8 40h29"/><path d="M19.5 16c-1.6-2 1.6-3.2 0-5.4M25.5 16c-1.6-2 1.6-3.2 0-5.4"/>',
+    c
+  );
+
 export function mark(conceptId, colors, uid) {
   if (conceptId === 'durum') return korMark(colors, uid);
   if (conceptId === 'kafe') return demMark(colors);
+  if (conceptId === 'cigkofte-premium') return avucMark(colors);
+  if (conceptId === 'durum-premium') return zirhMark(colors);
+  if (conceptId === 'kafe-premium') return sukunMark(colors);
   return yogrumMark(colors);
 }
 
 // Başlık / alt bilgi logosu (işaret + yazı)
 export function logo(conceptId, uid = 'logo') {
+  if (conceptId === 'cigkofte-premium') {
+    return `<span class="logo logo--p logo--avuc">${avucMark()}<span class="logo__text"><span class="logo__word">Avuç</span><span class="logo__sub">Çiğ Köfte Atölyesi</span></span></span>`;
+  }
+  if (conceptId === 'durum-premium') {
+    return `<span class="logo logo--p logo--zirh">${zirhMark()}<span class="logo__text"><span class="logo__word">Zırh</span><span class="logo__sub">Ocakbaşı</span></span></span>`;
+  }
+  if (conceptId === 'kafe-premium') {
+    return `<span class="logo logo--p logo--sukun">${sukunMark()}<span class="logo__text"><span class="logo__word">Sükûn</span><span class="logo__sub">Kahve Evi</span></span></span>`;
+  }
   if (conceptId === 'durum') {
     return `<span class="logo logo--kor"><span class="logo__word">K</span>${korMark({}, uid)}<span class="logo__word">R</span><span class="logo__sub">Ocakbaşı<br>Dürüm</span></span>`;
   }
@@ -50,8 +87,18 @@ export function logo(conceptId, uid = 'logo') {
   return `<span class="logo logo--yogrum">${yogrumMark()}<span class="logo__word">yoğrum</span></span>`;
 }
 
+const premiumFav = { 'cigkofte-premium': ['#F3EEE6', '#7A1F1F'], 'durum-premium': ['#0F0E0D', '#C3A16C'], 'kafe-premium': ['#ECE8E1', '#3E2C22'] };
+
 export function faviconHref(conceptId) {
   let svg;
+  if (premiumFav[conceptId]) {
+    const [bg, fg] = premiumFav[conceptId];
+    const inner = mark(conceptId, { stroke: fg })
+      .replace(/<svg[^>]*>/, '')
+      .replace('</svg>', '');
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="10" fill="${bg}"/><g fill="none" stroke="${fg}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${inner}</g></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
   if (conceptId === 'durum') {
     svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#110E0C"/><g transform="translate(8 4)">${korMark({}, 'fav')
       .replace(/<svg[^>]*>/, '')

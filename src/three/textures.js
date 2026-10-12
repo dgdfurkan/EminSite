@@ -113,22 +113,70 @@ export function grainTexture(opts) {
   });
 }
 
-export const kofteTexture = () =>
-  grainTexture({
-    base: '#8e2a14',
-    seed: 11,
-    blotches: [
-      { color: '#5e1a0b', count: 46, size: [20, 60], alpha: 0.4 },
-      { color: '#b4472a', count: 30, size: [16, 50], alpha: 0.3 },
-    ],
-    specks: [
-      { color: '#b4552e', count: 2600, size: [1.4, 3.2] },
-      { color: '#4a1207', count: 1000, size: [1.2, 2.6], bump: -1 },
-      { color: '#d07444', count: 420, size: [1, 2] },
-      { color: '#4f7d2a', count: 140, size: [1.4, 3.2], aspect: 0.4 },
-      { color: '#e8c79c', count: 40, size: [1, 2.2] },
-    ],
+// Çiğ köfte yüzeyi: bulgur taneleri, isot ve maydanoz benekleri, avuç/parmak izi çizgileri
+export function kofteTexture() {
+  return cached('kofte2', () => {
+    const S = 1024;
+    const r = rng(11);
+    const c = makeCanvas(S, S);
+    const b = makeCanvas(S, S);
+    const ctx = c.getContext('2d');
+    const bx = b.getContext('2d');
+    ctx.fillStyle = '#7c2311';
+    ctx.fillRect(0, 0, S, S);
+    bx.fillStyle = '#808080';
+    bx.fillRect(0, 0, S, S);
+    const wrapBlot = (x, y, rad, col, a) => {
+      for (const [dx, dy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) blot(ctx, x + dx, y + dy, rad, col, a);
+    };
+    for (let i = 0; i < 90; i++) wrapBlot(r() * S, r() * S, 30 + r() * 90, '#5a1608', 0.35);
+    for (let i = 0; i < 60; i++) wrapBlot(r() * S, r() * S, 24 + r() * 70, '#b2482a', 0.28);
+    // parmak izi: ince, kavisli ve paralel sırtlar (yalnız kabartma haritasında)
+    bx.lineWidth = 1.6;
+    for (let p = 0; p < 26; p++) {
+      const cx = r() * S;
+      const cy = r() * S;
+      const rot = r() * Math.PI;
+      const rings = 7 + Math.floor(r() * 8);
+      for (let k = 0; k < rings; k++) {
+        bx.strokeStyle = k % 2 ? 'rgba(170,170,170,0.55)' : 'rgba(90,90,90,0.55)';
+        bx.beginPath();
+        bx.ellipse(cx, cy, 12 + k * 7, 7 + k * 4.5, rot, Math.PI * 0.1, Math.PI * 1.25);
+        bx.stroke();
+      }
+    }
+    const specks = [
+      { color: '#a24726', count: 6200, size: [1.5, 3.4], bump: 1 },
+      { color: '#c16a3a', count: 1300, size: [1.1, 2.2], bump: 1 },
+      { color: '#3f0c04', count: 2400, size: [1.2, 2.8], bump: -1 },
+      { color: '#4f7d2a', count: 380, size: [1.4, 3.6], aspect: 0.38, bump: 0 },
+      { color: '#e8c79c', count: 90, size: [1, 2.2], bump: 1 },
+    ];
+    for (const sp of specks) {
+      for (let i = 0; i < sp.count; i++) {
+        const x = r() * S;
+        const y = r() * S;
+        const sz = sp.size[0] + r() * (sp.size[1] - sp.size[0]);
+        const rot = r() * Math.PI;
+        ctx.fillStyle = sp.color;
+        ctx.beginPath();
+        ctx.ellipse(x, y, sz, sz * (sp.aspect ?? 0.62), rot, 0, Math.PI * 2);
+        ctx.fill();
+        if (sp.bump) {
+          bx.fillStyle = sp.bump > 0 ? '#dcdcdc' : '#2e2e2e';
+          bx.beginPath();
+          bx.ellipse(x, y, sz, sz * (sp.aspect ?? 0.62), rot, 0, Math.PI * 2);
+          bx.fill();
+        }
+      }
+    }
+    const map = toTexture(c, { repeat: true });
+    const bump = toTexture(b, { srgb: false, repeat: true });
+    map.repeat.set(1, 1.5);
+    bump.repeat.set(1, 1.5);
+    return { map, bump };
   });
+}
 
 // --- Lavaş -----------------------------------------------------------------
 export function lavasTexture(seed = 3, repeatX = 1) {
@@ -213,6 +261,47 @@ export function paperTexture(style = 'yogrum') {
     const r = rng(5);
     const c = makeCanvas(W, H);
     const ctx = c.getContext('2d');
+    if (style === 'zirh') {
+      ctx.fillStyle = '#171615';
+      ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 1800; i++) {
+        ctx.fillStyle = r() > 0.5 ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.12)';
+        ctx.fillRect(r() * W, r() * H, 1 + r() * 14, 1);
+      }
+      ctx.fillStyle = '#c3a16c';
+      ctx.fillRect(0, H * 0.24, W, 2);
+      ctx.fillRect(0, H * 0.7, W, 2);
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < 3; i++) {
+        const x = (i + 0.5) * (W / 3);
+        ctx.font = `500 54px 'Bodoni Moda Variable', serif`;
+        ctx.fillText('Z I R H', x, H * 0.44);
+        ctx.font = `600 15px 'Inter Tight Variable', sans-serif`;
+        ctx.fillText('O C A K B A Ş I   ·   E R E Ğ L İ', x, H * 0.58);
+      }
+      return toTexture(c, { repeat: true });
+    }
+    if (style === 'avuc') {
+      ctx.fillStyle = '#efe7da';
+      ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 2200; i++) {
+        ctx.fillStyle = r() > 0.5 ? 'rgba(120,90,60,0.06)' : 'rgba(255,255,255,0.18)';
+        ctx.fillRect(r() * W, r() * H, 1 + r() * 12, 1);
+      }
+      ctx.fillStyle = '#7a1f1f';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < 3; i++) {
+        const x = (i + 0.5) * (W / 3);
+        ctx.font = `400 64px 'Instrument Serif', serif`;
+        ctx.fillText('Avuç', x, H * 0.42);
+        ctx.font = `600 14px 'Inter Tight Variable', sans-serif`;
+        ctx.fillText('Ç İ Ğ   K Ö F T E   A T Ö L Y E S İ', x, H * 0.56);
+      }
+      ctx.fillRect(0, H * 0.74, W, 1.5);
+      return toTexture(c, { repeat: true });
+    }
     if (style === 'kor') {
       ctx.fillStyle = '#c49a68';
       ctx.fillRect(0, 0, W, H);
@@ -381,6 +470,7 @@ export function leafTexture(tone = 'lettuce') {
     const b = H * 0.47;
     const tones = {
       lettuce: { inner: '#eef5b0', mid: '#9fd25a', edge: '#4f9a2c', vein: 'rgba(245,250,215,0.85)' },
+      gobek: { inner: '#f6f7d2', mid: '#cfe48f', edge: '#8dbb4c', vein: 'rgba(250,252,232,0.9)' },
       mint: { inner: '#7fbf5a', mid: '#4b9a3a', edge: '#2f6e24', vein: 'rgba(200,235,170,0.6)' },
       parsley: { inner: '#5fae3e', mid: '#3e8a2a', edge: '#2a6a1c', vein: 'rgba(190,230,150,0.55)' },
     };
@@ -607,6 +697,12 @@ export function cupPatternTexture(style = 'telve') {
       ctx.fillStyle = '#d9b26a';
       ctx.fillRect(0, H * 0.12, W, 5);
       ctx.fillRect(0, H * 0.46, W, 5);
+    } else if (style === 'porcelain') {
+      ctx.fillStyle = '#f6f3ee';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#c9a96a';
+      ctx.fillRect(0, 0, W, 6);
+      ctx.fillRect(0, H * 0.2, W, 2);
     } else if (style === 'sage') {
       ctx.fillStyle = '#7d8c66';
       ctx.fillRect(0, 0, W, H);
@@ -795,6 +891,52 @@ export function bakedTexture(kind) {
         ctx.beginPath();
         ctx.ellipse(r() * S, r() * S, 3.2, 1.6, r() * 3, 0, Math.PI * 2);
         ctx.fill();
+      }
+    } else if (kind === 'slate') {
+      ctx.fillStyle = '#2a2a2b';
+      ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < 120; i++) blot(ctx, r() * S, r() * S, 20 + r() * 80, r() > 0.5 ? '#1d1d1f' : '#3a3a3c', 0.35);
+      for (let i = 0; i < 2600; i++) {
+        ctx.fillStyle = r() > 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.25)';
+        ctx.fillRect(r() * S, r() * S, 1 + r() * 2, 1 + r() * 2);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      for (let i = 0; i < 40; i++) {
+        ctx.beginPath();
+        const y = r() * S;
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(S * 0.3, y + (r() - 0.5) * 30, S * 0.7, y + (r() - 0.5) * 30, S, y);
+        ctx.stroke();
+      }
+    } else if (kind === 'stone') {
+      ctx.fillStyle = '#b9b1a5';
+      ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < 140; i++) blot(ctx, r() * S, r() * S, 16 + r() * 60, r() > 0.5 ? '#a39a8d' : '#cdc6bb', 0.4);
+      for (let i = 0; i < 3000; i++) {
+        ctx.fillStyle = r() > 0.5 ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)';
+        ctx.fillRect(r() * S, r() * S, 1.4, 1.4);
+      }
+    } else if (kind === 'katmer') {
+      ctx.fillStyle = '#e7c27e';
+      ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < 90; i++) blot(ctx, r() * S, r() * S, 20 + r() * 50, r() > 0.5 ? '#c48e45' : '#f3d79c', 0.45);
+      ctx.fillStyle = '#7fa13a';
+      for (let i = 0; i < 700; i++) {
+        ctx.beginPath();
+        ctx.arc(S / 2 + (r() - 0.5) * S * 0.7, S / 2 + (r() - 0.5) * S * 0.7, 1.5 + r() * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (kind === 'baklava') {
+      ctx.fillStyle = '#d9a34e';
+      ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < 70; i++) blot(ctx, r() * S, r() * S, 20 + r() * 40, r() > 0.5 ? '#b5782e' : '#f0c477', 0.45);
+      ctx.strokeStyle = 'rgba(120,70,20,0.35)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < S; i += 9) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(S, i + (r() - 0.5) * 4);
+        ctx.stroke();
       }
     } else if (kind === 'ember') {
       ctx.fillStyle = '#000000';

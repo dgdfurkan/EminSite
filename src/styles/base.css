@@ -38,6 +38,7 @@
 html {
   background: var(--bg);
   color: var(--ink);
+  scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -56,10 +57,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-
-body.is-locked {
-  overflow: hidden;
 }
 
 img,
@@ -148,18 +145,10 @@ ol {
   transform: none;
 }
 
-/* Lenis */
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-
-.lenis:not(.lenis-autoToggle).lenis-stopped {
-  overflow: clip;
-}
-
-.lenis [data-lenis-prevent] {
-  overscroll-behavior: contain;
+/* Pencere/çekmece açıkken sayfa kaymasın */
+html.is-locked,
+html.is-locked body {
+  overflow: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -284,8 +273,8 @@ html.lenis body {
 .split-line-mask {
   padding-top: 0.22em;
   margin-top: -0.22em;
-  padding-bottom: 0.14em;
-  margin-bottom: -0.14em;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
 }
 
 /* --------------------------------------------------------------------------
@@ -421,12 +410,10 @@ html.lenis body {
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   border: 1px solid var(--line);
   font-size: 0.86rem;
   font-weight: 600;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .chip svg {

@@ -113,7 +113,7 @@ export function teaSet() {
 }
 
 // Türk kahvesi fincanı (desenli) ve köpük
-export function fincan({ pattern = 'telve', foam = true, scale = 1 } = {}) {
+export function fincan({ pattern = 'telve', foam = true, scale = 1, handleColor = null } = {}) {
   const g = new THREE.Group();
   const outer = [
     [0, 0],
@@ -136,7 +136,8 @@ export function fincan({ pattern = 'telve', foam = true, scale = 1 } = {}) {
   const tex = T.cupPatternTexture(pattern);
   const outerMat = K.phys({ map: tex, roughness: 0.2, clearcoat: 0.9, clearcoatRoughness: 0.1 });
   g.add(vessel(outer, inner, outerMat, cream()));
-  const h = handle({ r: 0.09, tube: 0.022, mat: K.ceramic(pattern === 'sage' ? '#7d8c66' : '#b95d3b') });
+  const hc = handleColor || (pattern === 'sage' ? '#7d8c66' : pattern === 'porcelain' ? '#f6f3ee' : '#b95d3b');
+  const h = handle({ r: 0.09, tube: 0.022, mat: K.ceramic(hc) });
   h.position.set(0.27, 0.3, 0);
   g.add(h);
   if (foam) {

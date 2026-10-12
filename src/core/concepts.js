@@ -3,6 +3,8 @@ export const CONCEPTS = {
   cigkofte: {
     id: 'cigkofte',
     label: 'Çiğ Köfte',
+    short: 'Çiğ Köfte',
+    tier: 'casual',
     brand: 'Yoğrum',
     full: 'Yoğrum Çiğ Köfte',
     tagline: 'Elde yoğrulur, gönülden sunulur.',
@@ -14,6 +16,8 @@ export const CONCEPTS = {
   durum: {
     id: 'durum',
     label: 'Dürüm',
+    short: 'Dürüm',
+    tier: 'casual',
     brand: 'KOR',
     full: 'KOR Ocakbaşı Dürüm',
     tagline: 'Közün hakkını veren dürüm.',
@@ -25,6 +29,8 @@ export const CONCEPTS = {
   kafe: {
     id: 'kafe',
     label: 'Kafe',
+    short: 'Kafe',
+    tier: 'casual',
     brand: 'Dem Telve',
     full: 'Dem Telve Kahve Evi',
     tagline: 'Bir fincan kahvenin kırk yıl hatırı vardır.',
@@ -33,9 +39,52 @@ export const CONCEPTS = {
     primary: '#B95D3B',
     accent: '#8C9A76',
   },
+  'cigkofte-premium': {
+    id: 'cigkofte-premium',
+    label: 'Premium Çiğ Köfte',
+    short: 'Çiğ Köfte',
+    tier: 'premium',
+    brand: 'Avuç',
+    full: 'Avuç Çiğ Köfte Atölyesi',
+    tagline: 'Avucun izi, ustanın imzası.',
+    bg: '#F3EEE6',
+    ink: '#1C1715',
+    primary: '#7A1F1F',
+    accent: '#5D6345',
+  },
+  'durum-premium': {
+    id: 'durum-premium',
+    label: 'Premium Dürüm',
+    short: 'Dürüm',
+    tier: 'premium',
+    brand: 'Zırh',
+    full: 'Zırh Ocakbaşı',
+    tagline: 'Meşe korunda, ustalıkla.',
+    bg: '#0F0E0D',
+    ink: '#ECE5DA',
+    primary: '#C3A16C',
+    accent: '#B4462C',
+  },
+  'kafe-premium': {
+    id: 'kafe-premium',
+    label: 'Premium Kafe',
+    short: 'Kafe',
+    tier: 'premium',
+    brand: 'Sükûn',
+    full: 'Sükûn Kahve Evi',
+    tagline: 'Acele etmeyenlere.',
+    bg: '#ECE8E1',
+    ink: '#22201C',
+    primary: '#3E2C22',
+    accent: '#7F8A74',
+  },
 };
 
-export const CONCEPT_ORDER = ['cigkofte', 'durum', 'kafe'];
+export const CONCEPT_GROUPS = {
+  standard: ['cigkofte', 'durum', 'kafe'],
+  premium: ['cigkofte-premium', 'durum-premium', 'kafe-premium'],
+};
+
 export const DEFAULT_CONCEPT = 'cigkofte';
 
 export function getConceptId() {

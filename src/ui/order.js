@@ -5,7 +5,7 @@ import { priceFor, defaultSelections } from '../core/cart.js';
 import { $, $$, esc, money, formatPhone, isValidPhone, orderCode, openStatus, fmtTime } from '../core/util.js';
 
 // Sipariş akışı: ürün penceresi, sepet çekmecesi, ödeme formu, onay ekranı.
-export function initOrdering({ concept, catalog, cart, thumbs, lenis, viewerFactory }) {
+export function initOrdering({ concept, catalog, cart, thumbs, scroller, viewerFactory }) {
   const drawer = $('#drawer');
   const pmodal = $('#pmodal');
   const scrim = $('[data-scrim]');
@@ -18,10 +18,12 @@ export function initOrdering({ concept, catalog, cart, thumbs, lenis, viewerFact
   let viewer = null;
 
   // ------------------------------------------------------------------ yardımcılar
+  let locked = false;
   function lock(on) {
-    document.body.classList.toggle('is-locked', on);
-    if (on) lenis?.stop();
-    else lenis?.start();
+    if (on === locked) return;
+    locked = on;
+    if (on) scroller?.stop();
+    else scroller?.start();
   }
 
   function showScrim(on) {
@@ -61,6 +63,7 @@ export function initOrdering({ concept, catalog, cart, thumbs, lenis, viewerFact
 
   // ------------------------------------------------------------------ uçan ürün
   function flyToCart(fromEl, productId) {
+    if (document.documentElement.dataset.tier === 'premium') return bump();
     const url = thumbs.get(productId);
     const target = window.innerWidth < 900 && cartbar.classList.contains('is-visible') ? cartbar : $('[data-open-cart]');
     if (!url || !fromEl || !target) return bump();
@@ -85,6 +88,7 @@ export function initOrdering({ concept, catalog, cart, thumbs, lenis, viewerFact
 
   function bump() {
     const btn = $('.cart-btn');
+    if (!btn) return;
     btn.classList.remove('is-bump');
     void btn.offsetWidth;
     btn.classList.add('is-bump');
@@ -565,7 +569,7 @@ export function initOrdering({ concept, catalog, cart, thumbs, lenis, viewerFact
     }
     if (e.target.closest('[data-go-menu]')) {
       closeDrawer();
-      lenis ? lenis.scrollTo('#menu', { offset: -10 }) : $('#menu').scrollIntoView();
+      scroller ? scroller.scrollTo('#menu') : $('#menu').scrollIntoView();
       return;
     }
     const q = e.target.closest('[data-line-qty]');

@@ -2,42 +2,100 @@ import * as THREE from 'three';
 import * as K from '../../three/kit.js';
 import * as T from '../../three/textures.js';
 
-// Avuçta sıkılmış çiğ köfte: dört parmak izi, hafif konik uçlar, taneli yüzey
-export function kofte({ len = 0.5, rad = 0.25, seed = 1 } = {}) {
-  const geo = new THREE.CapsuleGeometry(rad, len, 16, 40);
-  geo.rotateZ(Math.PI / 2);
-  const pos = geo.attributes.position;
-  const v = new THREE.Vector3();
-  const L = len / 2 + rad;
-  const grooves = [-0.5, -0.17, 0.17, 0.5].map((c) => c * L);
-  const r = T.rng(seed * 13);
-  const bend = 0.05 + r() * 0.06;
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i);
-    const t = v.x / L;
-    const taper = 1 - 0.12 * t * t;
-    let y = v.y * taper * 0.94;
-    let z = v.z * taper;
-    // parmak izleri: üst-ön yüzde dört oluk
-    const ang = Math.atan2(y, z);
-    const w = K.smooth(-0.45, 0.9, Math.cos(ang - 0.7));
-    let g = 0;
-    for (const c of grooves) g += Math.exp(-(((v.x - c) / (L * 0.085)) ** 2));
-    const k = 1 - 0.3 * w * Math.min(1, g);
-    y *= k;
-    z *= k;
-    // avuç tarafı hafif düz
-    if (z < 0) z *= 0.82;
-    // organik pürüz
-    const n = 1 + (K.fbm(v.x * 5 + seed, v.y * 5, v.z * 5) - 0.5) * 0.09;
-    y = y * n + bend * (1 - t * t) * rad * 2;
-    z *= n;
-    pos.setXYZ(i, v.x, y, z);
+// Avuçta sıkılmış çiğ köfte ("sıkım"):
+// - uzunlamasına dört parmak oyuğu ve aralarında belirgin boğumlar
+// - avuç tarafı düz, parmak tarafı oyuklu; serçe parmak ucu daha ince
+// - hafif kavis, organik pürüz ve parmak izi dokusu (bump)
+export function kofte({ len = 1.0, rad = 0.26, seed = 1, fingers = 4 } = {}) {
+  const NT = 150;
+  const NP = 72;
+  const r = T.rng(seed * 13 + 7);
+  const half = len / 2;
+  const span = 0.66; // oyukların dağıldığı t aralığı
+  const centers = Array.from({ length: fingers }, (_, i) => -span + (i * 2 * span) / (fingers - 1));
+  const gw = (span / (fingers - 1)) * 1.04; // oyuk yarı genişliği (t biriminde)
+  const jitter = centers.map(() => (r() - 0.5) * 0.05);
+  const depthJ = centers.map(() => 0.9 + r() * 0.2);
+  const phi0 = 0.95; // parmakların bastığı yön (üst-ön)
+  const bendAmt = 0.1 + r() * 0.06;
+  const pos = [];
+  const uv = [];
+  for (let i = 0; i <= NT; i++) {
+    const t = -1 + (2 * i) / NT;
+    // uç profili: serçe parmak ucu (t<0) daha ince ve sivri
+    const tip = t < 0 ? 0.5 : 0.4;
+    const asym = t < 0 ? 0.9 : 1.0;
+    const prof = Math.pow(Math.max(0, 1 - Math.abs(t) ** 2.2), tip) * asym;
+    for (let j = 0; j <= NP; j++) {
+      const phi = (j / NP) * Math.PI * 2;
+      let cy = Math.sin(phi) * 0.86;
+      let cz = Math.cos(phi);
+      // avuç tarafı (alt-arka) yassı
+      const palm = K.smooth(-0.2, 0.9, -Math.sin(phi - 0.35));
+      cy *= 1 - 0.3 * palm * (cy < 0 ? 1 : 0.4);
+      // parmak oyukları: dairesel kesit, aralarında keskin boğum
+      const facing = Math.cos(phi - phi0);
+      const wgt = K.smooth(-0.45, 0.5, facing);
+      let g = 0;
+      let gi = 0;
+      // parmaklar köfteyi hafif çapraz kavrar
+      const skew = 0.07 * Math.cos(phi - phi0 - 0.6);
+      for (let k = 0; k < centers.length; k++) {
+        const u = (t - centers[k] - jitter[k] - skew) / gw;
+        if (Math.abs(u) < 1) {
+          const v = Math.sqrt(1 - u * u);
+          if (v > g) {
+            g = v;
+            gi = k;
+          }
+        }
+      }
+      // işaret parmağı oyuğu en derin, serçe en sığ
+      const fingerDepth = (0.78 + 0.22 * (gi / Math.max(1, centers.length - 1))) * depthJ[gi];
+      let k = 1 - 0.3 * Math.pow(g, 1.35) * wgt * fingerDepth;
+      // boğumların sırtında hafif kabarma
+      k += 0.035 * (1 - g) * wgt * (Math.abs(t) < span + gw ? 1 : 0);
+      const n = 1 + (K.fbm(t * 2.6 + seed, cy * 2.2, cz * 2.2) - 0.5) * 0.14;
+      const R = rad * prof * k * n;
+      const x = t * half;
+      const bend = bendAmt * rad * (t * t - 0.35);
+      pos.push(x, cy * R + bend, cz * R);
+      uv.push(i / NT, j / NP);
+    }
   }
+  const idx = [];
+  const row = NP + 1;
+  for (let i = 0; i < NT; i++) {
+    for (let j = 0; j < NP; j++) {
+      const a = i * row + j;
+      const b = a + row;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
   geo.computeVertexNormals();
+  // dikiş ve uç noktalarında normalleri birleştir (çizgi görünmesin)
+  const nor = geo.attributes.normal;
+  const tmp = new THREE.Vector3();
+  for (let i = 0; i <= NT; i++) {
+    const a = i * row;
+    const b = a + NP;
+    tmp.set(nor.getX(a) + nor.getX(b), nor.getY(a) + nor.getY(b), nor.getZ(a) + nor.getZ(b)).normalize();
+    nor.setXYZ(a, tmp.x, tmp.y, tmp.z);
+    nor.setXYZ(b, tmp.x, tmp.y, tmp.z);
+  }
+  for (const i of [0, NT]) {
+    for (let j = 0; j <= NP; j++) nor.setXYZ(i * row + j, i === 0 ? -1 : 1, 0, 0);
+  }
+  nor.needsUpdate = true;
   const tex = T.kofteTexture();
-  const mat = K.std({ map: tex.map, bumpMap: tex.bump, bumpScale: 2.5, roughness: 0.78, metalness: 0 });
-  return new THREE.Mesh(geo, mat);
+  const mat = K.std({ map: tex.map, bumpMap: tex.bump, bumpScale: 3, roughness: 0.8, metalness: 0 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  return mesh;
 }
 
 export function wheatEar({ len = 1.7, seed = 1 } = {}) {
@@ -152,7 +210,7 @@ export function servingPlate({ pieces = 5, plateR = 1.3, withPlate = true, seed 
   ];
   for (let i = 0; i < Math.min(pieces, slots.length); i++) {
     const [x, yy, z, ry] = slots[i];
-    const k = kofte({ len: 0.36, rad: 0.175, seed: i + seed });
+    const k = kofte({ len: 0.74, rad: 0.18, seed: i + seed });
     k.position.set(x, y + 0.15 + yy, z);
     k.rotation.set(0, ry + (r() - 0.5) * 0.3, (r() - 0.5) * 0.1);
     g.add(k);

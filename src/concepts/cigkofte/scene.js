@@ -164,7 +164,7 @@ export function build({ stage, gsap, storyTl }) {
     [-0.15, 0.36, 0.55],
     [0.32, 0.35, -0.1],
   ].forEach(([x, z, ry], i) => {
-    const k = M.kofte({ len: 0.36, rad: 0.175, seed: i + 3 });
+    const k = M.kofte({ len: 0.74, rad: 0.18, seed: i + 3 });
     const holder = new THREE.Group();
     holder.add(k);
     holder.position.set(x, 0.24, z);

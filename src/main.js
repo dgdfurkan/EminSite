@@ -4,15 +4,26 @@ import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/fraunces/full.css';
 import '@fontsource-variable/fraunces/full-italic.css';
 import '@fontsource-variable/manrope/index.css';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource-variable/inter-tight/wght.css';
+import '@fontsource-variable/bodoni-moda/standard.css';
+import '@fontsource-variable/bodoni-moda/standard-italic.css';
+import '@fontsource-variable/cormorant-garamond/wght.css';
+import '@fontsource-variable/cormorant-garamond/wght-italic.css';
 import './styles/base.css';
 import './styles/themes.css';
 import './styles/components.css';
+import './styles/premium.css';
 import { getConceptId } from './core/concepts.js';
 
 const loaders = {
   cigkofte: () => import('./concepts/cigkofte/index.js'),
   durum: () => import('./concepts/durum/index.js'),
   kafe: () => import('./concepts/kafe/index.js'),
+  'cigkofte-premium': () => import('./concepts/cigkofte-premium/index.js'),
+  'durum-premium': () => import('./concepts/durum-premium/index.js'),
+  'kafe-premium': () => import('./concepts/kafe-premium/index.js'),
 };
 
 (async () => {

@@ -1,6 +1,6 @@
 import { icon } from '../core/icons.js';
 import { logo, mark } from '../core/logos.js';
-import { CONCEPTS, CONCEPT_ORDER } from '../core/concepts.js';
+import { CONCEPTS, CONCEPT_GROUPS, conceptUrl } from '../core/concepts.js';
 import { esc, money, fmtTime } from '../core/util.js';
 
 // Bölümlerin HTML çıktısı. Davranışlar ayrı modüllerde bağlanır.
@@ -37,7 +37,7 @@ export function backdrop(c) {
     ${glows
       .map(
         (g) =>
-          `<div class="backdrop__glow" style="left:${g.x};top:${g.y};width:${g.size};height:${g.size};background:${g.color};opacity:${g.opacity ?? 0.5}"></div>`
+          `<div class="backdrop__glow" style="left:${g.x};top:${g.y};width:${g.size};height:${g.size};background:radial-gradient(circle, ${g.color} 0%, transparent 68%);opacity:${g.opacity ?? 0.5}"></div>`
       )
       .join('')}
     <div class="backdrop__word" data-backdrop-word>${esc(c.brand.backdropWord)}</div>`;
@@ -146,15 +146,21 @@ export function deals(c, catalog) {
     })
     .join('');
   return `
-  <section class="deals" id="kampanyalar" aria-label="${esc(d.title)}">
+  <section class="deals" id="kampanyalar" aria-label="${esc(d.title)}" data-carousel>
     <div class="deals__inner">
       <div class="wrap">
         <div class="section-head section-head--split">
           <div><span class="eyebrow" data-reveal>${esc(d.eyebrow)}</span><h2 class="h2" data-split style="margin-top:14px">${d.title}</h2></div>
-          <p class="lead" data-reveal>${esc(d.text)}</p>
+          <div style="display:grid;gap:22px">
+            <p class="lead" data-reveal>${esc(d.text)}</p>
+            <div class="carousel-nav">
+              <button type="button" data-carousel-prev aria-label="Önceki kampanyalar">${icon.arrow}</button>
+              <button type="button" data-carousel-next aria-label="Sonraki kampanyalar">${icon.arrow}</button>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="deals__track" data-deals-track>${cards}</div>
+      <div class="deals__track" data-carousel-track>${cards}</div>
     </div>
   </section>`;
 }
@@ -358,37 +364,19 @@ function monoColors(c) {
   return { body: ink, leaf: ink, shine: 'transparent', dot: 'transparent', arch: ink, glass: 'transparent', tea: ink, flame: ink };
 }
 
-export function switcher(c) {
-  const cards = CONCEPT_ORDER.map((id) => {
+// Sayfanın en altındaki küçük konsept butonları (iki seri: standart ve premium)
+export function miniSwitch(currentId) {
+  const link = (id) => {
     const k = CONCEPTS[id];
-    const active = id === c.id;
-    const nameClass = id === 'cigkofte' ? 'yogrum' : id === 'durum' ? 'kor' : 'dem';
-    const name = { cigkofte: 'yoğrum', durum: 'KOR', kafe: 'Dem <em>Telve</em>' }[id];
-    return `
-    <button class="concept-card${active ? ' is-active' : ''}" type="button" data-concept-go="${id}" style="--c-bg:${k.bg};--c-ink:${k.ink};--c-primary:${k.primary}" ${active ? 'aria-current="true"' : ''} aria-label="${esc(k.label)} konseptine geç: ${esc(k.full)}">
-      <span class="concept-card__glow"></span>
-      <span class="concept-card__top">
-        <span class="concept-card__mark">${mark(id, {}, 'sw-' + id)}</span>
-        ${active ? '<span class="concept-card__state">Şu an görüntülenen</span>' : ''}
-      </span>
-      <span>
-        <span class="concept-card__kind">${esc(k.label)}</span>
-        <span class="concept-card__name concept-card__name--${nameClass}" style="display:block">${name}</span>
-        <span class="concept-card__tagline" style="display:block">${esc(k.tagline)}</span>
-      </span>
-      <span class="concept-card__go">${active ? 'Bu konsepttesiniz' : 'Bu konsepte geç'} <span>${icon.arrow}</span></span>
-    </button>`;
-  }).join('');
+    const cur = id === currentId;
+    return `<a href="${conceptUrl(id)}" data-concept-go="${id}"${cur ? ' aria-current="true"' : ''} aria-label="${esc(k.full)}${cur ? ' (şu an görüntülenen)' : ''}">${esc(k.short)}</a>`;
+  };
   return `
-  <section class="section switcher" id="konseptler" aria-label="Konsept seçici">
-    <div class="wrap">
-      <div class="section-head section-head--split">
-        <div><span class="eyebrow" data-reveal>Prototip seçici</span><h2 class="h2" data-split style="margin-top:14px">Başka bir konsepte <em>göz atın</em></h2></div>
-        <p class="lead" data-reveal>Aynı altyapı, üç farklı marka. Bir konsept seçin; site o markanın renkleri, menüsü ve hikâyesiyle yeniden yüklensin.</p>
-      </div>
-      <div class="switcher__grid">${cards}</div>
-    </div>
-  </section>`;
+  <nav class="mini-switch" id="konseptler" aria-label="Prototip konseptleri">
+    <span class="mini-switch__title">Prototip</span>
+    <div class="mini-switch__group"><span>Standart</span>${CONCEPT_GROUPS.standard.map(link).join('')}</div>
+    <div class="mini-switch__group"><span>Premium</span>${CONCEPT_GROUPS.premium.map(link).join('')}</div>
+  </nav>`;
 }
 
 export function footer(c) {
@@ -412,13 +400,14 @@ export function footer(c) {
         </div>
         <div class="footer__col">
           <h3>İletişim</h3>
-          <ul><li>${esc(ct.address)}</li><li>${esc(ct.phoneDisplay)}</li><li><a href="#konseptler" data-scroll>Diğer konseptler</a></li></ul>
+          <ul><li>${esc(ct.address)}</li><li>${esc(ct.phoneDisplay)}</li></ul>
         </div>
       </div>
       <div class="footer__bottom">
         <span>© ${year} ${esc(c.brand.full)} · Konya Ereğli</span>
         <span>Bu site bir prototiptir; fiyatlar, adres ve iletişim bilgileri temsilîdir.</span>
       </div>
+      ${miniSwitch(c.id)}
     </div>
   </footer>`;
 }
@@ -426,8 +415,8 @@ export function footer(c) {
 export function overlays(c) {
   return `
   <div class="scrim" data-scrim></div>
-  <aside class="drawer" id="drawer" data-view="cart" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true" data-lenis-prevent></aside>
-  <div class="pmodal" id="pmodal" role="dialog" aria-modal="true" aria-labelledby="pmodal-title" aria-hidden="true" data-lenis-prevent></div>
+  <aside class="drawer" id="drawer" data-view="cart" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true"></aside>
+  <div class="pmodal" id="pmodal" role="dialog" aria-modal="true" aria-labelledby="pmodal-title" aria-hidden="true"></div>
   <div class="cartbar" data-cartbar aria-hidden="true">
     <div class="cartbar__info"><small data-cartbar-count>0 ürün</small><strong data-cartbar-total>${money(0)}</strong></div>
     <button class="btn btn--sm" type="button" data-open-cart>Sepeti gör ${icon.arrow}</button>

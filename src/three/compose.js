@@ -63,7 +63,7 @@ export function introPop(gsap, items, { delay = 0, stagger = 0.06 } = {}) {
 export function heroExit(gsap, items, trigger = '.hero') {
   const tl = gsap.timeline({
     defaults: { ease: 'none' },
-    scrollTrigger: { trigger, start: 'top top', end: 'bottom top', scrub: 0.9 },
+    scrollTrigger: { trigger, start: 'top top', end: 'bottom top', scrub: 0.4 },
   });
   items.forEach((it, i) => {
     const e = it.exit || {};
@@ -92,7 +92,7 @@ export function storyEnter(gsap, group, trigger = '.story', from = -10) {
     {
       y: 0,
       ease: 'power2.out',
-      scrollTrigger: { trigger, start: 'top bottom', end: 'top top', scrub: 0.9 },
+      scrollTrigger: { trigger, start: 'top bottom', end: 'top top', scrub: 0.4 },
       onUpdate: () => (group.visible = group.position.y > from + 0.05),
     }
   );
