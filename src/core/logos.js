@@ -58,7 +58,34 @@ const sukunMark = (c) =>
     c
   );
 
+// Butik seri
+const isotMark = (c = {}) => `
+<svg class="mark mark--isot" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+  <path d="M30.6 13.4c5.6 1.4 8.1 7 6.3 13.3-2.3 8.2-10.1 15.3-23.3 16.9-2 .2-2.6-1.4-1-2.4 8.5-5.4 12-11.9 12.1-19.6 0-5.3 1.6-9.3 5.9-8.2Z" fill="${c.body || '#B8222B'}"/>
+  <path d="M27.8 20.5c.2 6.4-2.6 12.4-8.3 17" stroke="${c.shine || '#FBF3EA'}" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".45"/>
+  <path d="M27 15.3c1.4-2.1 4.4-2.9 6.7-1.5" stroke="${c.stem || '#4F7A2E'}" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <path d="M30.4 13.6c.1-3.1 1.6-5.8 4.4-7.1" stroke="${c.stem || '#4F7A2E'}" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+</svg>`;
+
+const ocakMark = (c = {}) => `
+<svg class="mark mark--ocak" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+  <rect x="2" y="7" width="44" height="34" rx="2.5" fill="${c.bg || '#C4161C'}"/>
+  <text x="24" y="35.5" text-anchor="middle" font-family="'Big Shoulders Display Variable', 'Arial Narrow', Impact, sans-serif" font-weight="800" font-size="30" letter-spacing="1" fill="${c.ink || '#FBFAF6'}">42</text>
+</svg>`;
+
+const hatirMark = (c = {}) => `
+<svg class="mark mark--hatir" viewBox="0 0 48 48" fill="none" stroke="${c.stroke || 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  <path d="M11 19h24l-2.1 11.8a8 8 0 0 1-7.9 6.6h-4a8 8 0 0 1-7.9-6.6Z"/>
+  <path d="M35 22h1.6a3.6 3.6 0 0 1 0 7.2H34"/>
+  <path d="M7 41.5h32"/>
+  <path d="M23 31c-2.6-1.1-3-3.9-1.6-5.7.9 1.1 1.3 1.8 1.6 2.7.3-.9.7-1.6 1.6-2.7 1.4 1.8 1 4.6-1.6 5.7Z" fill="${c.stroke || 'currentColor'}" stroke="none"/>
+  <path d="M19 14.5c-1.3-1.6 1.3-2.8 0-4.6M26.5 14.5c-1.3-1.6 1.3-2.8 0-4.6"/>
+</svg>`;
+
 export function mark(conceptId, colors, uid) {
+  if (conceptId === 'cigkofte-butik') return isotMark(colors);
+  if (conceptId === 'durum-butik') return ocakMark(colors);
+  if (conceptId === 'kafe-butik') return hatirMark(colors);
   if (conceptId === 'durum') return korMark(colors, uid);
   if (conceptId === 'kafe') return demMark(colors);
   if (conceptId === 'cigkofte-premium') return avucMark(colors);
@@ -69,6 +96,15 @@ export function mark(conceptId, colors, uid) {
 
 // Başlık / alt bilgi logosu (işaret + yazı)
 export function logo(conceptId, uid = 'logo') {
+  if (conceptId === 'cigkofte-butik') {
+    return `<span class="logo logo--isot">${isotMark()}<span class="logo__word">isot</span></span>`;
+  }
+  if (conceptId === 'durum-butik') {
+    return `<span class="logo logo--ocak"><span class="logo__word">Ocak</span><span class="logo__num">42</span></span>`;
+  }
+  if (conceptId === 'kafe-butik') {
+    return `<span class="logo logo--hatir">${hatirMark()}<span class="logo__word">Hatır</span></span>`;
+  }
   if (conceptId === 'cigkofte-premium') {
     return `<span class="logo logo--p logo--avuc">${avucMark()}<span class="logo__text"><span class="logo__word">Avuç</span><span class="logo__sub">Çiğ Köfte Atölyesi</span></span></span>`;
   }
@@ -91,6 +127,19 @@ const premiumFav = { 'cigkofte-premium': ['#F3EEE6', '#7A1F1F'], 'durum-premium'
 
 export function faviconHref(conceptId) {
   let svg;
+  const inner = (m) => m.replace(/<svg[^>]*>/, '').replace('</svg>', '');
+  if (conceptId === 'cigkofte-butik') {
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#CFE4A4"/>${inner(isotMark())}</svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
+  if (conceptId === 'durum-butik') {
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="8" fill="#C4161C"/><text x="24" y="35" text-anchor="middle" font-family="Impact, 'Arial Narrow', sans-serif" font-weight="800" font-size="28" fill="#FBFAF6">42</text></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
+  if (conceptId === 'kafe-butik') {
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#213F9A"/><g fill="none" stroke="#F7F6F2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${inner(hatirMark({ stroke: '#F7F6F2' }))}</g></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
   if (premiumFav[conceptId]) {
     const [bg, fg] = premiumFav[conceptId];
     const inner = mark(conceptId, { stroke: fg })

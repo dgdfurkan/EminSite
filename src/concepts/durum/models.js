@@ -217,12 +217,12 @@ export function rollingLavas({ W = 2.4, H = 1.9, rMin = 0.06, rMax = 0.3 } = {})
   return mesh;
 }
 
-export function fries() {
+export function fries({ label = { bg: '#ff5a1f', ink: '#110e0c', title: 'KOR', sub: 'PATATES', font: 'Anton', weight: 400 }, bottom: bottomColor = '#d84a16' } = {}) {
   const g = new THREE.Group();
   const cone = new THREE.Mesh(
     new THREE.CylinderGeometry(0.42, 0.3, 0.75, 4, 1, true),
     K.std({
-      map: T.labelTexture({ bg: '#ff5a1f', ink: '#110e0c', title: 'KOR', sub: 'PATATES', font: 'Anton', weight: 400, w: 1024, h: 512 }),
+      map: T.labelTexture({ ...label, w: 1024, h: 512 }),
       roughness: 0.6,
       side: THREE.DoubleSide,
     })
@@ -230,7 +230,7 @@ export function fries() {
   cone.rotation.y = Math.PI / 4;
   cone.position.y = 0.375;
   g.add(cone);
-  const bottom = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.01, 0.42), K.std({ color: '#d84a16' }));
+  const bottom = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.01, 0.42), K.std({ color: bottomColor }));
   g.add(bottom);
   const r = T.rng(9);
   const mat = K.std({ map: T.bakedTexture('fries'), roughness: 0.55 });

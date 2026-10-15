@@ -1,0 +1,184 @@
+/* ==========================================================================
+   BUTİK SERİ: İsot (çiğ köfte), Ocak 42 (dürüm), Hatır (kahve)
+   Ortak düzen ve sipariş katmanları. Her markanın kimliği kendi dosyasında.
+   Ürün görselleri önceden üretilmiş fotoğraflardır; sayfa 3D yüklemez.
+   ========================================================================== */
+
+html[data-tier='butik'] {
+  --maxw: 1240px;
+  --display-case: none;
+  --display-stretch: 100%;
+  --display-fvs: normal;
+  --btn-case: none;
+  --btn-tracking: 0;
+}
+
+html[data-tier='butik'] body {
+  font-size: 16.5px;
+  line-height: 1.6;
+}
+
+/* Butonlara ok eklenmez: eylemi metin anlatır */
+html[data-tier='butik'] .btn .btn__arrow {
+  display: none;
+}
+
+/* Sahne katmanları bu seride boş */
+html[data-tier='butik'] .stage,
+html[data-tier='butik'] .stage-backdrop {
+  display: none;
+}
+
+/* --- Mobil menü düğmesi: iki çizgi, açılınca çarpı ------------------------- */
+html[data-tier='butik'] .burger {
+  display: inline-grid;
+  align-content: center;
+  gap: 6px;
+  width: 44px;
+  height: 44px;
+  padding: 0 11px;
+  border-radius: 999px;
+}
+
+html[data-tier='butik'] .burger span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 0.4s var(--ease-out);
+}
+
+html[data-tier='butik'] .burger[aria-expanded='true'] span:first-child {
+  transform: translateY(4px) rotate(45deg);
+}
+
+html[data-tier='butik'] .burger[aria-expanded='true'] span:last-child {
+  transform: translateY(-4px) rotate(-45deg);
+}
+
+@media (min-width: 1000px) {
+  html[data-tier='butik'] .burger {
+    display: none;
+  }
+}
+
+/* --- Açık/kapalı durumu ---------------------------------------------------- */
+.b-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.b-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+.b-status.is-open .b-status__dot {
+  background: #3f9a3a;
+  opacity: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #3f9a3a 25%, transparent);
+}
+
+/* --- Alt bilgi ------------------------------------------------------------- */
+.b-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+html[data-tier='butik'] .mini-switch {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 18px;
+}
+
+html[data-tier='butik'] .mini-switch__title {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* --- Ürün penceresi: canlı 3D yok, fotoğraf var ----------------------------- */
+html[data-tier='butik'] .pmodal__viewer {
+  cursor: default;
+  touch-action: auto;
+  background: var(--thumb-bg);
+}
+
+html[data-tier='butik'] .pmodal__viewer img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: b-photo-in 0.7s var(--ease-out) both;
+}
+
+@keyframes b-photo-in {
+  from {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 899px) {
+  html[data-tier='butik'] .pmodal__viewer {
+    height: min(36svh, 340px);
+  }
+}
+
+html[data-tier='butik'] .pmodal__title {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  line-height: 1.02;
+}
+
+html[data-tier='butik'] .opt-group legend {
+  font-weight: 700;
+}
+
+html[data-tier='butik'] .cart-line__img {
+  background: var(--thumb-bg);
+}
+
+html[data-tier='butik'] .cart-line__img img {
+  object-fit: cover;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Ön yükleyici: kısa, yalnızca marka işareti ------------------------------ */
+html[data-tier='butik'] .preloader__bar,
+html[data-tier='butik'] .preloader__count {
+  display: none;
+}
+
+html[data-tier='butik'] .preloader__mark .mark {
+  animation: b-pre 1.2s var(--ease-in-out) infinite alternate;
+}
+
+@keyframes b-pre {
+  from {
+    transform: scale(0.94);
+  }
+  to {
+    transform: scale(1.04);
+  }
+}
+
+/* --- Erişilebilirlik: azaltılmış hareket ------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html[data-tier='butik'] .pmodal__viewer img {
+    animation: none;
+  }
+}

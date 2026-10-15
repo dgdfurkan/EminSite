@@ -1,0 +1,964 @@
+/* ==========================================================================
+   OCAK 42 DÜRÜM
+   Malzemeler: beyaz sırlı fayans, siyah keçe harfli pano, krom tezgâh,
+   kırmızı tabela, sipariş fişi kâğıdı.
+   Yazı: Big Shoulders Display (tabela), Instrument Sans (pano harfleri ve metin).
+   ========================================================================== */
+
+html[data-concept='durum-butik'] {
+  --tile: #f2f1ec;
+  --grout: #dcd9d0;
+  --felt: #1d1d1b;
+  --letter: #f4f2ec;
+  --red: #c4161c;
+  --red-deep: #9a0f14;
+  --ticket: #fbfaf6;
+  --bg: var(--tile);
+  --bg-2: #e9e7e0;
+  --surface: var(--ticket);
+  --surface-2: #f6f5f0;
+  --ink: #1d1d1b;
+  --ink-soft: #57564f;
+  --line: rgba(29, 29, 27, 0.14);
+  --primary: var(--red);
+  --primary-ink: #fbfaf6;
+  --accent: #4f7a2e;
+  --accent-2: #ece9e0;
+  --dark: var(--felt);
+  --dark-ink: var(--letter);
+  --focus: #c4161c;
+  --font-display: 'Big Shoulders Display Variable', Impact, 'Arial Narrow', sans-serif;
+  --font-body: 'Instrument Sans Variable', system-ui, sans-serif;
+  --display-weight: 800;
+  --display-tracking: 0.01em;
+  --display-leading: 0.92;
+  --r-lg: 6px;
+  --r-md: 4px;
+  --r-sm: 4px;
+  --r-btn: 4px;
+  --shadow-pop: 0 30px 70px -30px rgba(0, 0, 0, 0.5);
+  --thumb-bg: var(--ticket);
+  --tile-size: 72px;
+}
+
+/* Sırlı fayans duvar: derz çizgileri ve her karede hafif parlama */
+html[data-concept='durum-butik'] main {
+  background-color: var(--tile);
+  background-image:
+    linear-gradient(var(--grout) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grout) 1px, transparent 1px),
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.55), transparent 46%);
+  background-size: var(--tile-size) var(--tile-size);
+  background-position: -1px -1px;
+}
+
+/* --- Logo ------------------------------------------------------------------ */
+.logo--ocak {
+  gap: 8px;
+  font-family: var(--font-display);
+}
+
+.logo--ocak .logo__word {
+  font-weight: 800;
+  font-size: 2.05rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.logo--ocak .logo__num {
+  padding: 3px 7px 1px;
+  border-radius: 4px;
+  background: var(--ticket);
+  color: var(--red);
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+/* --- Tabela (başlık) ------------------------------------------------------- */
+.o-header {
+  background: var(--red);
+  color: var(--ticket);
+  box-shadow: inset 0 -3px 0 var(--red-deep);
+}
+
+.o-header.is-scrolled {
+  background: var(--red);
+  box-shadow:
+    inset 0 -3px 0 var(--red-deep),
+    0 8px 24px -16px rgba(0, 0, 0, 0.5);
+}
+
+.o-header__in {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+}
+
+.o-header__logo {
+  margin-right: auto;
+}
+
+.o-nav {
+  display: none;
+  gap: 4px;
+}
+
+.o-nav a {
+  padding: 8px 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.o-nav a:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.o-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.o-status {
+  display: none;
+  margin-right: 8px;
+}
+
+.o-cart {
+  height: 42px;
+  padding: 0 6px 0 14px;
+  border-radius: 4px;
+  background: var(--ticket);
+  color: var(--red);
+}
+
+.o-cart__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 3px;
+  background: var(--red);
+  color: var(--ticket);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+@media (min-width: 1000px) {
+  .o-nav {
+    display: flex;
+  }
+}
+
+@media (min-width: 1180px) {
+  .o-status {
+    display: inline-flex;
+  }
+}
+
+/* --- Hero: pano ve tezgâh ---------------------------------------------------- */
+.o-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding-top: calc(var(--header-h) + 28px);
+  overflow-x: clip;
+}
+
+.o-hero__grid {
+  display: grid;
+  gap: 26px;
+}
+
+.o-hero__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(3rem, 13.4vw, 6.6rem);
+  line-height: 0.88;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: var(--red);
+  text-wrap: balance;
+}
+
+.o-hero__text {
+  margin-top: 16px;
+  max-width: 40ch;
+  font-size: 1.08rem;
+  color: var(--ink-soft);
+}
+
+.o-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.o-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 4px;
+  background: var(--red);
+  color: var(--ticket);
+  font-weight: 700;
+  font-size: 1.02rem;
+  box-shadow: inset 0 -3px 0 var(--red-deep);
+  transition: transform 0.15s;
+}
+
+.o-btn:active {
+  transform: translateY(2px);
+}
+
+.o-btn--line {
+  background: var(--ticket);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* Alüminyum çerçeveli keçe pano */
+.o-board {
+  padding: 11px;
+  border-radius: 6px;
+  background: linear-gradient(150deg, #eef0f1 0%, #b6babd 38%, #e9ebec 52%, #9fa3a6 100%);
+  box-shadow:
+    0 26px 40px -26px rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.o-board__felt {
+  --row: 30px;
+  padding: 12px 16px 14px;
+  border-radius: 2px;
+  background-color: var(--felt);
+  background-image:
+    var(--felt-grain),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--row) - 3px),
+      rgba(0, 0, 0, 0.6) calc(var(--row) - 3px),
+      rgba(0, 0, 0, 0.6) calc(var(--row) - 1px),
+      rgba(255, 255, 255, 0.07) calc(var(--row) - 1px),
+      rgba(255, 255, 255, 0.07) var(--row)
+    );
+  background-position:
+    0 0,
+    0 12px;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.7);
+}
+
+.o-board__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+  height: var(--row);
+  padding: 0 2px 4px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-stretch: 92%;
+  font-size: calc(var(--row) * 0.56);
+  line-height: 1;
+  letter-spacing: 0.07em;
+  color: var(--letter);
+  text-align: left;
+  border-radius: 2px;
+}
+
+.o-board__row--head {
+  color: #ef4b40;
+}
+
+.o-board__name,
+.o-board__price {
+  white-space: nowrap;
+}
+
+.o-l {
+  display: inline-block;
+  transform: translateY(var(--y)) rotate(var(--r));
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.55),
+    0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.o-sp {
+  display: inline-block;
+  width: 0.45em;
+}
+
+button.o-board__row:hover .o-l {
+  color: #fff;
+}
+
+button.o-board__row:focus-visible {
+  outline: 2px solid var(--letter);
+  outline-offset: 2px;
+}
+
+/* Krom tezgâh: dürüm üstünde durur */
+.o-counter {
+  position: relative;
+  flex: none;
+  height: 92px;
+  margin-top: auto;
+  background: linear-gradient(to bottom, #fafbfb 0, #c4c8cb 6px, #e4e7e9 34%, #c9cdd0 70%, #aeb2b5 100%);
+  box-shadow:
+    0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 10px 24px -14px rgba(0, 0, 0, 0.4) inset;
+}
+
+.o-counter__in {
+  position: relative;
+  height: 100%;
+}
+
+/* Fotoğrafta nesnenin tabanı görselin %71'inde: o çizgi tezgâhın yüzeyine otursun */
+.o-counter__food {
+  --w: min(106vw, 560px);
+  position: absolute;
+  left: calc(50% - var(--w) / 2);
+  top: calc(20px - var(--w) * 0.45);
+  width: var(--w);
+  max-width: none;
+  height: auto;
+  pointer-events: none;
+}
+
+.o-hero__grid {
+  padding-bottom: 200px;
+}
+
+@media (min-width: 900px) {
+  .o-hero__grid {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    align-items: center;
+    gap: 5vw;
+  }
+  .o-hero__title {
+    font-size: clamp(4rem, 7vw, 7.4rem);
+  }
+  .o-board__felt {
+    --row: 40px;
+    padding: 16px 24px 18px;
+    background-position:
+      0 0,
+      0 16px;
+  }
+  .o-hero__grid {
+    padding-bottom: 210px;
+  }
+  .o-counter {
+    height: 116px;
+  }
+  .o-counter__food {
+    --w: min(58vw, 800px);
+    left: calc(var(--w) * -0.12);
+    top: calc(24px - var(--w) * 0.45);
+  }
+}
+
+/* --- Menü ------------------------------------------------------------------ */
+.o-menu {
+  padding-block: clamp(64px, 9vw, 110px) 28px;
+}
+
+.o-h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(3rem, 9vw, 6rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: var(--red);
+  text-wrap: balance;
+}
+
+.o-menu-nav {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 20;
+  margin-top: 22px;
+  padding-block: 10px;
+  background: color-mix(in srgb, var(--tile) 95%, transparent);
+  box-shadow: 0 1px 0 var(--grout);
+}
+
+.o-menu-nav__list {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.o-menu-nav__list::-webkit-scrollbar {
+  display: none;
+}
+
+.o-tab {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.96rem;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  background: var(--ticket);
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.o-tab.is-active {
+  background: var(--ink);
+  color: var(--ticket);
+  box-shadow: none;
+}
+
+.o-cat {
+  padding-top: 40px;
+}
+
+.o-cat__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin-bottom: 14px;
+}
+
+.o-h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 3.6vw, 2.4rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.o-cat__head p {
+  color: var(--ink-soft);
+}
+
+.o-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.o-item {
+  display: flex;
+  flex-direction: column;
+  background: var(--ticket);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.o-item__main {
+  display: grid;
+  grid-template-columns: 116px 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 0 10px;
+  text-align: left;
+  flex: 1;
+}
+
+.o-item__img {
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--thumb-bg);
+}
+
+.o-item__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.o-item__text {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+}
+
+.o-item__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.55rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.o-item__tag {
+  justify-self: start;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--red);
+  color: var(--ticket);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.o-item__desc {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.o-item__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 12px 12px 140px;
+}
+
+/* Telefonda kare kesimde dürüm küçük kalmasın; fiyat ve buton metin sütununun altında */
+@media (max-width: 639px) {
+  .o-item {
+    position: relative;
+  }
+  .o-item__main {
+    align-items: start;
+    min-height: 136px;
+    padding-bottom: 10px;
+  }
+  .o-item__text {
+    padding: 2px 0 52px;
+  }
+  .o-item__img img {
+    transform: scale(1.32);
+  }
+  .o-item__foot {
+    position: absolute;
+    left: 140px;
+    right: 12px;
+    bottom: 10px;
+    padding: 0;
+  }
+}
+
+.o-item__price {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+.o-item__add {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--ticket);
+  font-weight: 700;
+  transition: transform 0.15s;
+}
+
+.o-item__add:active {
+  transform: translateY(2px);
+}
+
+@media (min-width: 640px) {
+  .o-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .o-item__main {
+    grid-template-columns: 1fr;
+    align-items: start;
+    padding: 0;
+  }
+  .o-item__img {
+    aspect-ratio: 4 / 3;
+  }
+  .o-item__text {
+    padding: 12px 16px 0;
+  }
+  .o-item__foot {
+    padding: 12px 16px 16px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .o-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* --- Ustanın sırası: fayans karolar ---------------------------------------- */
+.o-steps {
+  padding-block: clamp(64px, 9vw, 110px);
+}
+
+.o-steps__list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 30px;
+  border-top: 1px solid var(--grout);
+  border-left: 1px solid var(--grout);
+  counter-reset: step;
+}
+
+.o-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 210px;
+  padding: 16px;
+  border-right: 1px solid var(--grout);
+  border-bottom: 1px solid var(--grout);
+  background: radial-gradient(circle at 26% 18%, #fff, #f6f5f1 60%);
+  counter-increment: step;
+}
+
+.o-tile::before {
+  content: counter(step);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 3rem;
+  line-height: 0.9;
+  color: var(--red);
+}
+
+.o-tile h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.o-tile p {
+  font-size: 0.93rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+@media (min-width: 900px) {
+  .o-steps__list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .o-tile {
+    aspect-ratio: 1;
+    padding: 22px;
+  }
+  .o-tile p {
+    margin-top: auto;
+  }
+}
+
+/* --- Saatler -------------------------------------------------------------- */
+.o-info {
+  padding-block: clamp(56px, 8vw, 100px);
+}
+
+.o-info__grid {
+  display: grid;
+  gap: 26px;
+}
+
+.o-facts {
+  background: var(--ticket);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.o-facts > div {
+  padding: 18px 20px;
+  border-bottom: 1.5px dashed var(--line);
+}
+
+.o-facts > div:last-child {
+  border-bottom: 0;
+}
+
+.o-facts dt {
+  font-weight: 700;
+  color: var(--red);
+}
+
+.o-facts dd {
+  color: var(--ink-soft);
+}
+
+.o-facts dd strong {
+  display: block;
+  margin: 2px 0 6px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.o-facts a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+html[data-concept='durum-butik'] .open-badge {
+  display: inline-flex;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--bg-2);
+  color: var(--ink);
+}
+
+html[data-concept='durum-butik'] .open-badge.is-open {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (min-width: 900px) {
+  .o-info__grid {
+    grid-template-columns: 0.8fr 1.2fr;
+    align-items: start;
+    gap: 5vw;
+  }
+  .o-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .o-facts > div:nth-child(odd) {
+    border-right: 1.5px dashed var(--line);
+  }
+  .o-facts > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+
+/* --- SSS ------------------------------------------------------------------- */
+.o-faq {
+  padding-block: 0 clamp(64px, 9vw, 110px);
+}
+
+.o-faq__grid {
+  display: grid;
+  gap: 24px;
+}
+
+html[data-concept='durum-butik'] .faq__list {
+  display: grid;
+  gap: 8px;
+}
+
+html[data-concept='durum-butik'] .faq-item {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--ticket);
+}
+
+html[data-concept='durum-butik'] .faq-item__q {
+  padding: 18px 18px 18px 20px;
+}
+
+html[data-concept='durum-butik'] .faq-item__a p {
+  padding: 0 20px 20px;
+}
+
+html[data-concept='durum-butik'] .faq-item__icon {
+  border-radius: 4px;
+}
+
+@media (min-width: 900px) {
+  .o-faq__grid {
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 5vw;
+  }
+}
+
+/* --- Alt bilgi: keçe ---------------------------------------------------------- */
+.o-footer {
+  background-color: var(--felt);
+  background-image: var(--felt-grain);
+  color: var(--letter);
+  padding-block: clamp(56px, 8vw, 90px) calc(28px + var(--safe-b));
+}
+
+.o-footer__top {
+  display: grid;
+  gap: 24px;
+}
+
+.o-footer__brand p {
+  max-width: 46ch;
+  margin-top: 14px;
+  opacity: 0.8;
+}
+
+.o-footer .logo--ocak .logo__num {
+  background: var(--red);
+  color: var(--ticket);
+}
+
+.o-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .o-footer__top {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+/* --- Katmanlar: sepet bir sipariş fişi -------------------------------------- */
+.o-mnav {
+  background: var(--tile);
+}
+
+html[data-concept='durum-butik'] .mnav__links a {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+html[data-concept='durum-butik'] .drawer {
+  background: var(--ticket);
+  border-radius: 0;
+}
+
+/* fişin tırtıklı kenarı */
+html[data-concept='durum-butik'] .drawer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -9px;
+  height: 10px;
+  background:
+    linear-gradient(-45deg, var(--ticket) 5px, transparent 0) 0 0 / 12px 10px repeat-x,
+    linear-gradient(45deg, var(--ticket) 5px, transparent 0) 0 0 / 12px 10px repeat-x;
+}
+
+@media (min-width: 760px) {
+  html[data-concept='durum-butik'] .drawer::before {
+    inset: 0 auto 0 -9px;
+    width: 10px;
+    height: auto;
+    background:
+      linear-gradient(-45deg, var(--ticket) 5px, transparent 0) 0 0 / 10px 12px repeat-y,
+      linear-gradient(-135deg, var(--ticket) 5px, transparent 0) 0 0 / 10px 12px repeat-y;
+  }
+}
+
+html[data-concept='durum-butik'] .drawer__title,
+html[data-concept='durum-butik'] .pmodal__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+html[data-concept='durum-butik'] .drawer__title {
+  font-size: 1.7rem;
+}
+
+html[data-concept='durum-butik'] .drawer__head,
+html[data-concept='durum-butik'] .drawer__foot {
+  border-color: transparent;
+  background: transparent;
+}
+
+html[data-concept='durum-butik'] .drawer__foot {
+  border-top: 1.5px dashed var(--line);
+}
+
+html[data-concept='durum-butik'] .cart-line {
+  background: transparent;
+  border-radius: 0;
+  border-bottom: 1.5px dashed var(--line);
+  padding: 12px 0;
+}
+
+html[data-concept='durum-butik'] .totals__grand dd {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+}
+
+html[data-concept='durum-butik'] .pmodal__dialog {
+  border-radius: 6px 6px 0 0;
+  background: var(--ticket);
+}
+
+@media (min-width: 900px) {
+  html[data-concept='durum-butik'] .pmodal__dialog {
+    border-radius: 6px;
+  }
+}
+
+html[data-concept='durum-butik'] .btn {
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--btn-bg) 70%, #000);
+}
+
+html[data-concept='durum-butik'] .btn--ghost {
+  box-shadow: none;
+}
+
+/* Bildirim: yazıcıdan çıkan fiş */
+html[data-concept='durum-butik'] .toast {
+  border-radius: 0;
+  background: var(--ticket);
+  color: var(--ink);
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.45);
+}
+
+html[data-concept='durum-butik'] .toast svg {
+  color: var(--red);
+}
+
+html[data-concept='durum-butik'] .toast::before,
+html[data-concept='durum-butik'] .toast::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+}
+
+html[data-concept='durum-butik'] .toast::before {
+  top: -7px;
+  background:
+    linear-gradient(-45deg, var(--ticket) 4px, transparent 0) 0 0 / 10px 8px repeat-x,
+    linear-gradient(45deg, var(--ticket) 4px, transparent 0) 0 0 / 10px 8px repeat-x;
+}
+
+html[data-concept='durum-butik'] .toast::after {
+  bottom: -7px;
+  background:
+    linear-gradient(-135deg, var(--ticket) 4px, transparent 0) 0 0 / 10px 8px repeat-x,
+    linear-gradient(135deg, var(--ticket) 4px, transparent 0) 0 0 / 10px 8px repeat-x;
+}
+
+html[data-concept='durum-butik'] .cartbar {
+  border-radius: 4px;
+  background: var(--felt);
+  color: var(--letter);
+}
+
+html[data-concept='durum-butik'] .preloader {
+  background: var(--tile);
+}
+
+html[data-concept='durum-butik'] .preloader__mark {
+  width: 84px;
+  height: 84px;
+}

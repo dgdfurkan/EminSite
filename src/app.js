@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import * as sections from './ui/sections.js';
 import * as premiumUI from './ui/premium.js';
 import * as fx from './ui/fx.js';
@@ -6,7 +5,6 @@ import { initOrdering } from './ui/order.js';
 import { createCart } from './core/cart.js';
 import { faviconHref, mark } from './core/logos.js';
 import { $, $$, esc } from './core/util.js';
-import { Stage, ThumbRenderer, Viewer, supportsWebGL } from './three/stage.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // rAF arka plandaki sekmede durur; açılış takılmasın diye zaman aşımı yedeği var
@@ -53,7 +51,7 @@ function createThumbStore() {
   };
 }
 
-async function generateThumbs(concept, catalog, store) {
+async function generateThumbs(concept, catalog, store, ThumbRenderer) {
   let tr;
   try {
     const t = concept.thumbOpts || {};
@@ -106,7 +104,10 @@ function casualPage(concept, catalog) {
 export async function boot(concept) {
   const { gsap, ScrollTrigger } = fx;
   const premium = concept.tier === 'premium';
-  document.documentElement.dataset.tier = premium ? 'premium' : 'casual';
+  // Butik seri 3D kullanmaz: ürün fotoğrafları önceden üretilmiş dosyalardır, Three.js hiç yüklenmez.
+  const butik = concept.tier === 'butik';
+  const threeLoad = butik ? Promise.resolve([null, null]) : Promise.all([import('./three/stage.js'), import('three')]);
+  document.documentElement.dataset.tier = concept.tier || 'casual';
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.scrollTo(0, 0);
 
@@ -136,9 +137,11 @@ export async function boot(concept) {
   const catalog = new Map();
   concept.menu.categories.forEach((c) => c.products.forEach((p) => catalog.set(p.id, p)));
 
-  $('#app').innerHTML = premium ? premiumUI.page(concept, catalog) : casualPage(concept, catalog);
-  $('#stage-backdrop').innerHTML = premium ? '' : sections.backdrop(concept);
+  $('#app').innerHTML = butik ? concept.ui.page(concept, catalog) : premium ? premiumUI.page(concept, catalog) : casualPage(concept, catalog);
+  $('#stage-backdrop').innerHTML = premium || butik ? '' : sections.backdrop(concept);
   setProgress(25);
+
+  const [three, THREE] = await threeLoad;
 
   await Promise.race([document.fonts.ready, wait(2500)]);
   setProgress(45);
@@ -152,7 +155,8 @@ export async function boot(concept) {
 
   const cart = createCart(concept.id, catalog);
   const thumbs = createThumbStore();
-  const webgl = supportsWebGL();
+  const webgl = !butik && three.supportsWebGL();
+  if (butik) catalog.forEach((p) => thumbs.set(p.id, concept.photo(p.id)));
   initOrdering({
     concept,
     catalog,
@@ -162,7 +166,7 @@ export async function boot(concept) {
     viewerFactory: webgl
       ? () => {
           try {
-            return new Viewer(concept.thumbOpts);
+            return new three.Viewer(concept.thumbOpts);
           } catch (e) {
             console.error(e);
             return null;
@@ -172,12 +176,12 @@ export async function boot(concept) {
   });
 
   // --- 3D sahne
-  const storyTl = premium ? null : fx.storyTimeline();
+  const storyTl = premium || butik ? null : fx.storyTimeline();
   let stage = null;
   let sceneApi = null;
   if (webgl) {
     try {
-      stage = new Stage($('#stage'), concept.stageOpts);
+      stage = new three.Stage($('#stage'), concept.stageOpts);
       sceneApi = concept.scene.build({ THREE, stage, gsap, ScrollTrigger, storyTl, reduced: fx.reduced });
       await frame();
       stage.warmup();
@@ -191,7 +195,10 @@ export async function boot(concept) {
   setProgress(80);
 
   // --- Kaydırma efektleri
-  if (premium) {
+  let butikApi = null;
+  if (butik) {
+    butikApi = concept.ui.init({ gsap, ScrollTrigger, SplitText: fx.SplitText, scroller, concept, catalog, cart, reduced: fx.reduced });
+  } else if (premium) {
     fx.initReveals({ soft: true });
     fx.initManifesto();
     premiumUI.initHeroScroll(gsap, fx.reduced);
@@ -203,7 +210,7 @@ export async function boot(concept) {
     fx.initMagnetic();
     fx.initSpinners();
   }
-  fx.initCarousel();
+  if (!butik) fx.initCarousel();
   fx.initMenuNav(scroller);
   fx.initFaq();
   fx.initSwitcher(concept.id, scroller);
@@ -244,8 +251,10 @@ export async function boot(concept) {
   // --- Açılış
   const intro = gsap.timeline({ onComplete: () => ScrollTrigger.refresh() });
   // Ürün görselleri açılış animasyonundan bağımsız başlasın (arka plan sekmesinde de)
-  setTimeout(() => (webgl ? generateThumbs(concept, catalog, thumbs) : catalog.forEach((p) => thumbs.fail(p.id, p.name))), 1800);
-  intro.to(pre, { clipPath: 'inset(0 0 100% 0)', duration: premium ? 1.1 : 0.9, ease: premium ? 'power3.inOut' : 'expo.inOut' });
+  if (!butik) {
+    setTimeout(() => (webgl ? generateThumbs(concept, catalog, thumbs, three.ThumbRenderer) : catalog.forEach((p) => thumbs.fail(p.id, p.name))), 1800);
+  }
+  intro.to(pre, { clipPath: 'inset(0 0 100% 0)', duration: premium ? 1.1 : butik ? 0.75 : 0.9, ease: premium ? 'power3.inOut' : 'expo.inOut' });
   intro.call(
     () => {
       pre.remove();
@@ -255,7 +264,9 @@ export async function boot(concept) {
     0.6
   );
   if (sceneApi?.intro) intro.add(sceneApi.intro(), 0.3);
-  intro.add(fx.heroIntro({ soft: premium }), 0.4);
+  if (butik) {
+    if (butikApi?.intro) intro.add(butikApi.intro(), 0.35);
+  } else intro.add(fx.heroIntro({ soft: premium }), 0.4);
 
   // Yeniden boyutlanınca ölçüleri güncelle
   let rt;

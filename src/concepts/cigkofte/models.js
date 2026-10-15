@@ -213,12 +213,12 @@ export function kneadBowl() {
 }
 
 // Marul yatağında çiğ köfteler, limon ve nar taneleri
-export function servingPlate({ pieces = 5, plateR = 1.3, withPlate = true, seed = 3 } = {}) {
+export function servingPlate({ pieces = 5, plateR = 1.3, withPlate = true, seed = 3, rim = '#d7262f' } = {}) {
   const g = new THREE.Group();
   const r = T.rng(seed);
   let y = 0;
   if (withPlate) {
-    const p = K.plate({ r: plateR, color: '#fffaf2', rimColor: '#d7262f' });
+    const p = K.plate({ r: plateR, color: '#fffaf2', rimColor: rim });
     g.add(p);
     y = p.userData.top;
   }
@@ -258,7 +258,7 @@ export function servingPlate({ pieces = 5, plateR = 1.3, withPlate = true, seed 
 }
 
 // Paket servis kabı (300 g / 500 g / 1 kg)
-export function tub({ scale = 1 } = {}) {
+export function tub({ scale = 1, label = { bg: '#d7262f', ink: '#fff4e8', title: 'yoğrum', sub: 'ÇİĞ KÖFTE' } } = {}) {
   const g = new THREE.Group();
   const w = 1.5 * scale;
   const d = 1.05 * scale;
@@ -270,7 +270,7 @@ export function tub({ scale = 1 } = {}) {
   shell.position.y = h / 2;
   const band = new THREE.Mesh(
     K.roundedBox(w + 0.01, h * 0.34, d + 0.01, 0.06 * scale, 4),
-    K.std({ map: T.labelTexture({ bg: '#d7262f', ink: '#fff4e8', title: 'yoğrum', sub: 'ÇİĞ KÖFTE', w: 1024, h: 256 }), roughness: 0.45 })
+    K.std({ map: T.labelTexture({ ...label, w: 1024, h: 256 }), roughness: 0.45 })
   );
   band.position.y = h * 0.45;
   const tex = T.kofteTexture();

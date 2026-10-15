@@ -1,4 +1,4 @@
-// Üç konseptin hafif kimlik bilgileri. Ağır içerik (menü, 3D sahne) her konseptin kendi modülünde.
+// Konseptlerin hafif kimlik bilgileri. Ağır içerik (menü, 3D sahne) her konseptin kendi modülünde.
 export const CONCEPTS = {
   cigkofte: {
     id: 'cigkofte',
@@ -78,11 +78,51 @@ export const CONCEPTS = {
     primary: '#3E2C22',
     accent: '#7F8A74',
   },
+  'cigkofte-butik': {
+    id: 'cigkofte-butik',
+    label: 'Butik Çiğ Köfte',
+    short: 'Çiğ Köfte',
+    tier: 'butik',
+    brand: 'İsot',
+    full: 'İsot Çiğ Köfte',
+    tagline: 'Acısını siz seçin.',
+    bg: '#CFE4A4',
+    ink: '#1E3511',
+    primary: '#B8222B',
+    accent: '#4F7A2E',
+  },
+  'durum-butik': {
+    id: 'durum-butik',
+    label: 'Butik Dürüm',
+    short: 'Dürüm',
+    tier: 'butik',
+    brand: 'Ocak 42',
+    full: 'Ocak 42 Dürüm',
+    tagline: 'Közde pişer, elde sarılır.',
+    bg: '#F2F1EC',
+    ink: '#1D1D1B',
+    primary: '#C4161C',
+    accent: '#4F7A2E',
+  },
+  'kafe-butik': {
+    id: 'kafe-butik',
+    label: 'Butik Kafe',
+    short: 'Kafe',
+    tier: 'butik',
+    brand: 'Hatır',
+    full: 'Hatır Kahve',
+    tagline: 'Kahveniz bizden, hatırı sizden.',
+    bg: '#213F9A',
+    ink: '#F7F6F2',
+    primary: '#213F9A',
+    accent: '#C5A24A',
+  },
 };
 
 export const CONCEPT_GROUPS = {
   standard: ['cigkofte', 'durum', 'kafe'],
   premium: ['cigkofte-premium', 'durum-premium', 'kafe-premium'],
+  butik: ['cigkofte-butik', 'durum-butik', 'kafe-butik'],
 };
 
 export const DEFAULT_CONCEPT = 'cigkofte';

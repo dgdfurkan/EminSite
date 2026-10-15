@@ -302,6 +302,56 @@ export function paperTexture(style = 'yogrum') {
       ctx.fillRect(0, H * 0.74, W, 1.5);
       return toTexture(c, { repeat: true });
     }
+    if (style === 'isot') {
+      // ince sülfit kâğıt, isot kırmızısı geniş yazı
+      ctx.fillStyle = '#f5f1e8';
+      ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 2000; i++) {
+        ctx.fillStyle = r() > 0.5 ? 'rgba(140,110,80,0.06)' : 'rgba(255,255,255,0.2)';
+        ctx.fillRect(r() * W, r() * H, 1 + r() * 12, 1);
+      }
+      ctx.fillStyle = '#b8222b';
+      ctx.fillRect(0, H * 0.16, W, 10);
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < 3; i++) {
+        const x = (i + 0.5) * (W / 3);
+        ctx.font = `900 extra-expanded 84px 'Anybody Variable', sans-serif`;
+        ctx.fillText('isot', x, H * 0.4);
+        ctx.font = `700 19px 'Atkinson Hyperlegible Next Variable', sans-serif`;
+        ctx.fillText('Ç İ Ğ   K Ö F T E   ·   E R E Ğ L İ', x, H * 0.58);
+      }
+      ctx.fillStyle = '#4f7a2e';
+      ctx.fillRect(0, H * 0.72, W, 6);
+      return toTexture(c, { repeat: true });
+    }
+    if (style === 'ocak') {
+      // beyaz yağlı kâğıt, kırmızı tabela yazısı
+      ctx.fillStyle = '#f7f5ef';
+      ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 1600; i++) {
+        ctx.fillStyle = r() > 0.5 ? 'rgba(120,110,90,0.05)' : 'rgba(255,255,255,0.3)';
+        ctx.fillRect(r() * W, r() * H, 1 + r() * 16, 1);
+      }
+      ctx.fillStyle = '#c4161c';
+      ctx.fillRect(0, H * 0.2, W, H * 0.3);
+      ctx.fillStyle = '#f7f5ef';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < 3; i++) {
+        const x = (i + 0.5) * (W / 3);
+        ctx.font = `800 104px 'Big Shoulders Display Variable', Impact, sans-serif`;
+        ctx.fillText('OCAK 42', x, H * 0.355);
+      }
+      ctx.fillStyle = '#c4161c';
+      for (let i = 0; i < 3; i++) {
+        const x = (i + 0.5) * (W / 3);
+        ctx.font = `700 26px 'Big Shoulders Display Variable', Impact, sans-serif`;
+        ctx.fillText('OCAKBAŞI DÜRÜM  ·  EREĞLİ', x, H * 0.6);
+      }
+      ctx.fillRect(0, H * 0.7, W, 3);
+      return toTexture(c, { repeat: true });
+    }
     if (style === 'kor') {
       ctx.fillStyle = '#c49a68';
       ctx.fillRect(0, 0, W, H);
@@ -712,6 +762,34 @@ export function cupPatternTexture(style = 'telve') {
         ctx.arc((i + 0.5) * (W / 24), H * 0.3, 7, 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (style === 'kobalt') {
+      // Kütahya fincanı: beyaz porselen, kobalt lale bandı, yaldızlı ağız
+      ctx.fillStyle = '#f7f6f2';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#c5a24a';
+      ctx.fillRect(0, 0, W, 7);
+      ctx.fillStyle = '#213f9a';
+      ctx.fillRect(0, H * 0.13, W, 4);
+      ctx.fillRect(0, H * 0.47, W, 4);
+      const n = 12;
+      for (let i = 0; i < n; i++) {
+        const x = (i + 0.5) * (W / n);
+        const y = H * 0.3;
+        // lale: üç yaprak ve sap
+        ctx.beginPath();
+        ctx.moveTo(x, y + 26);
+        ctx.bezierCurveTo(x - 24, y + 10, x - 20, y - 18, x - 6, y - 24);
+        ctx.bezierCurveTo(x - 4, y - 8, x - 2, y - 4, x, y - 2);
+        ctx.bezierCurveTo(x + 2, y - 4, x + 4, y - 8, x + 6, y - 24);
+        ctx.bezierCurveTo(x + 20, y - 18, x + 24, y + 10, x, y + 26);
+        ctx.fill();
+        // yapraklar arası nokta
+        ctx.beginPath();
+        ctx.arc(x + W / n / 2, y + 2, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#c5a24a';
+      ctx.fillRect(0, H * 0.96, W, 4);
     } else if (style === 'cream') {
       ctx.fillStyle = '#f3e9da';
       ctx.fillRect(0, 0, W, H);
@@ -995,7 +1073,7 @@ export function bakedTexture(kind) {
 }
 
 // --- Etiketli ambalaj (kutu, kapak) -------------------------------------------
-export function labelTexture({ bg, ink, title, sub, accent, font = 'Bricolage Grotesque Variable', weight = 800, w = 1024, h = 512, stripes }) {
+export function labelTexture({ bg, ink, title, sub, accent, font = 'Bricolage Grotesque Variable', weight = 800, stretch = 'normal', subFont = 'Manrope Variable', w = 1024, h = 512, stripes }) {
   return cached('label:' + JSON.stringify(arguments[0]), () => {
     const c = makeCanvas(w, h);
     const ctx = c.getContext('2d');
@@ -1018,10 +1096,10 @@ export function labelTexture({ bg, ink, title, sub, accent, font = 'Bricolage Gr
     const reps = w > h * 1.5 ? 2 : 1;
     for (let i = 0; i < reps; i++) {
       const x = (i + 0.5) * (w / reps);
-      ctx.font = `${weight} ${Math.round(h * 0.26)}px '${font}', sans-serif`;
+      ctx.font = `${weight} ${stretch} ${Math.round(h * 0.26)}px '${font}', sans-serif`;
       ctx.fillText(title, x, h * 0.45);
       if (sub) {
-        ctx.font = `700 ${Math.round(h * 0.075)}px 'Manrope Variable', sans-serif`;
+        ctx.font = `700 ${Math.round(h * 0.075)}px '${subFont}', sans-serif`;
         ctx.fillText(sub, x, h * 0.66);
       }
     }

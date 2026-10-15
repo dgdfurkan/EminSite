@@ -242,6 +242,8 @@ export class ThumbRenderer {
     this.lights = addLights(this.scene, opts.lights);
     this.camera = new THREE.PerspectiveCamera(opts.fov ?? 26, width / height, 0.1, 100);
     this.shadowOpacity = opts.shadowOpacity ?? 0.34;
+    this.format = opts.format || (this.studio ? 'image/jpeg' : 'image/webp');
+    this.quality = opts.quality ?? 0.9;
     if (this.studio) {
       this.scene.background = studioBackground(this.studio.inner, this.studio.outer);
       enableShadows(this.renderer, this.lights.key, 2048);
@@ -269,6 +271,11 @@ export class ThumbRenderer {
   }
 
   async render(build, view = {}) {
+    const blob = await this.renderBlob(build, view);
+    return blob ? URL.createObjectURL(blob) : null;
+  }
+
+  async renderBlob(build, view = {}) {
     setGlassReal(!!this.studio);
     const obj = build();
     const holder = fit(obj, 2);
@@ -283,8 +290,8 @@ export class ThumbRenderer {
 
     let shadow = null;
     if (view.shadow !== false) {
-      const sz = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 1.25;
-      shadow = contactShadow(sz, this.studio ? this.shadowOpacity * 0.6 : this.shadowOpacity);
+      const sz = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * (view.shadowScale ?? 1.25);
+      shadow = contactShadow(sz, view.shadowOpacity ?? (this.studio ? this.shadowOpacity * 0.6 : this.shadowOpacity));
       shadow.position.set(center.x, box.min.y + 0.002, center.z);
       this.scene.add(shadow);
     }
@@ -317,8 +324,7 @@ export class ThumbRenderer {
     tickAll(holder, 1.2);
     if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
-    const type = this.studio ? 'image/jpeg' : 'image/webp';
-    const blob = await new Promise((res) => this.renderer.domElement.toBlob(res, type, 0.9));
+    const blob = await new Promise((res) => this.renderer.domElement.toBlob(res, this.format, this.quality));
 
     this.scene.remove(holder);
     disposeObject(holder, { materials: false });
@@ -326,7 +332,7 @@ export class ThumbRenderer {
       this.scene.remove(shadow);
       disposeObject(shadow, { materials: false });
     }
-    return blob ? URL.createObjectURL(blob) : null;
+    return blob;
   }
 
   dispose() {

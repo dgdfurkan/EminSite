@@ -25,8 +25,8 @@ export function trUpper(s) {
   return String(s).toLocaleUpperCase('tr-TR');
 }
 
-// "10:00" -> "10.00" (TDK saat yazımı)
-export const fmtTime = (t) => t.replace(':', '.');
+// "10:00" -> "10.00" (TDK saat yazımı). Gece yarısı kapanış "24.00" olarak yazılır.
+export const fmtTime = (t) => (t === '00:00' ? '24.00' : t.replace(':', '.'));
 
 function toMinutes(t) {
   const [h, m] = t.split(':').map(Number);

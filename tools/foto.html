@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ürün fotoğrafı üretici</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font: 14px/1.5 system-ui, sans-serif;
+        background: #ddd;
+        color: #111;
+      }
+      #log {
+        margin-bottom: 14px;
+      }
+      #grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      figure {
+        margin: 0;
+        background: repeating-conic-gradient(#ccc 0 25%, #eee 0 50%) 0 0 / 16px 16px;
+      }
+      figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      figcaption {
+        padding: 4px 6px;
+        background: #fff;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Yalnızca geliştirme aracıdır. Kullanım: <code>/tools/foto.html?k=cigkofte-butik</code> (birden çoğu virgülle). <code>&amp;id=hero</code> ile tek fotoğraf.</p>
+    <div id="log">Bekleniyor…</div>
+    <div id="grid"></div>
+    <script type="module" src="./foto.js"></script>
+  </body>
+</html>

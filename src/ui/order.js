@@ -62,8 +62,14 @@ export function initOrdering({ concept, catalog, cart, thumbs, scroller, viewerF
   }
 
   // ------------------------------------------------------------------ uçan ürün
-  function flyToCart(fromEl, productId) {
-    if (document.documentElement.dataset.tier === 'premium') return bump();
+  function flyToCart(fromEl, productId, qty = 1) {
+    const tier = document.documentElement.dataset.tier;
+    if (tier === 'butik') {
+      // Butik seride her marka eklemeyi kendi küçük animasyonuyla gösterir
+      document.dispatchEvent(new CustomEvent('cart:added', { detail: { id: productId, from: fromEl, qty } }));
+      return bump();
+    }
+    if (tier === 'premium') return bump();
     const url = thumbs.get(productId);
     const target = window.innerWidth < 900 && cartbar.classList.contains('is-visible') ? cartbar : $('[data-open-cart]');
     if (!url || !fromEl || !target) return bump();
@@ -125,7 +131,7 @@ export function initOrdering({ concept, catalog, cart, thumbs, scroller, viewerF
         <div class="pmodal__body">
           <div class="pmodal__viewer" data-viewer>
             ${thumbFor(p.id)}
-            <span class="pmodal__hint">${icon.rotate}Döndürmek için sürükleyin</span>
+            ${viewerFactory ? `<span class="pmodal__hint">${icon.rotate}Döndürmek için sürükleyin</span>` : ''}
           </div>
           <div class="pmodal__right">
             <div class="pmodal__scroll">
@@ -241,8 +247,9 @@ export function initOrdering({ concept, catalog, cart, thumbs, scroller, viewerF
       cart.add(current, sel, qty, note);
       toast(`${current.name} sepete eklendi`);
       const pid = current.id;
+      const n = qty;
       closeModal();
-      setTimeout(() => flyToCart(src, pid), 80);
+      setTimeout(() => flyToCart(src, pid, n), 80);
     }
   });
 

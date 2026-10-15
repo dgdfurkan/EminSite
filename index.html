@@ -13,11 +13,11 @@
       // Konsept rengini ilk boyamadan önce uygula (beyaz flaş olmasın)
       (function () {
         if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-        var ids = { cigkofte: '#FFF4E8', durum: '#110E0C', kafe: '#F5EEE3', 'cigkofte-premium': '#F3EEE6', 'durum-premium': '#0F0E0D', 'kafe-premium': '#ECE8E1' };
+        var ids = { cigkofte: '#FFF4E8', durum: '#110E0C', kafe: '#F5EEE3', 'cigkofte-premium': '#F3EEE6', 'durum-premium': '#0F0E0D', 'kafe-premium': '#ECE8E1', 'cigkofte-butik': '#CFE4A4', 'durum-butik': '#F2F1EC', 'kafe-butik': '#213F9A' };
         var p = new URLSearchParams(location.search).get('konsept');
         var id = ids[p] ? p : 'cigkofte';
         document.documentElement.dataset.concept = id;
-        document.documentElement.dataset.tier = id.indexOf('-premium') > 0 ? 'premium' : 'casual';
+        document.documentElement.dataset.tier = id.indexOf('-premium') > 0 ? 'premium' : id.indexOf('-butik') > 0 ? 'butik' : 'casual';
         document.documentElement.style.background = ids[id];
         document.querySelector('meta[name="theme-color"]').setAttribute('content', ids[id]);
       })();

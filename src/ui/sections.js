@@ -376,6 +376,7 @@ export function miniSwitch(currentId) {
     <span class="mini-switch__title">Prototip</span>
     <div class="mini-switch__group"><span>Standart</span>${CONCEPT_GROUPS.standard.map(link).join('')}</div>
     <div class="mini-switch__group"><span>Premium</span>${CONCEPT_GROUPS.premium.map(link).join('')}</div>
+    <div class="mini-switch__group"><span>Butik</span>${CONCEPT_GROUPS.butik.map(link).join('')}</div>
   </nav>`;
 }
 

@@ -24,6 +24,9 @@ const loaders = {
   'cigkofte-premium': () => import('./concepts/cigkofte-premium/index.js'),
   'durum-premium': () => import('./concepts/durum-premium/index.js'),
   'kafe-premium': () => import('./concepts/kafe-premium/index.js'),
+  'cigkofte-butik': () => import('./concepts/cigkofte-butik/index.js'),
+  'durum-butik': () => import('./concepts/durum-butik/index.js'),
+  'kafe-butik': () => import('./concepts/kafe-butik/index.js'),
 };
 
 (async () => {
